@@ -15,7 +15,7 @@
 
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| Container | Docker + Docker Compose | Jeden `docker-compose up` uruchamia całość |
+| Container | Docker + Docker Compose | Jeden `docker compose up` uruchamia całość |
 | Reverse Proxy | Caddy | Automatyczny HTTPS, prosta konfiguracja, darmowy; alternatywa: Nginx |
 | CI/CD | GitHub Actions | Darmowy dla projektów publicznych; integracja z GitHub |
 | Database Pooling | PgBouncer lub Prisma Accelerate | Connection pooling — wymagany przy setkach req/s na VPS |

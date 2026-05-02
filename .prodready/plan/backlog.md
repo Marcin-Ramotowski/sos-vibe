@@ -34,7 +34,7 @@ Docker Compose dla środowiska deweloperskiego: aplikacja + PostgreSQL.
 - [ ] `docker-compose.yml` z serwisami: `app` (Next.js dev) + `db` (postgres:16-alpine)
 - [ ] `.env.example` z: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV`
 - [ ] `.dockerignore` wykluczający `node_modules/`, `.next/`, `.git/`
-- [ ] `docker-compose up` startuje oba serwisy
+- [ ] `docker compose up` startuje oba serwisy
 - [ ] Hot reload działa w kontenerze (`volumes` dla src/)
 - [ ] `Makefile` z targetami: `dev`, `db-up`, `db-down`, `logs`
 
