@@ -1,7 +1,7 @@
 # SOS — System Obsługi Studiów
 
 Akademicki system obsługi studiów: zapisy na kursy, oceny, zarządzanie użytkownikami.
-Zaprojektowany jako nowoczesna alternatywa dla przestarzałych systemów uczelniaich — prosty, szybki, transakcyjnie bezpieczny.
+Zaprojektowany jako nowoczesna alternatywa dla przestarzałych systemów uczelnianych — prosty, szybki, transakcyjnie bezpieczny.
 
 ## Funkcjonalności
 
