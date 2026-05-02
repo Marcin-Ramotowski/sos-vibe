@@ -1,0 +1,89 @@
+flowchart TD
+    subgraph S1[Sprint 1: Foundation]
+        T001[TASK-001\nScaffolding]
+        T002[TASK-002\nDocker]
+        T003[TASK-003\nDatabase]
+        T004[TASK-004\nAuth Backend]
+        T005[TASK-005\nAuth UI]
+    end
+
+    subgraph S2[Sprint 2: Kursy]
+        T006[TASK-006\nCourse Domain]
+        T007[TASK-007\nCourse API]
+        T008[TASK-008\nCourse UI Admin]
+        T009[TASK-009\nCourse UI Student]
+    end
+
+    subgraph S3[Sprint 3: Zapisy]
+        T010[TASK-010\nEnrollment Domain\n⚠️ race condition]
+        T011[TASK-011\nEnrollment API]
+        T012[TASK-012\nEnrollment UI]
+    end
+
+    subgraph S4[Sprint 4: Oceny]
+        T013[TASK-013\nGrade Domain]
+        T014[TASK-014\nGrade API]
+        T015[TASK-015\nGrade UI Lecturer]
+        T016[TASK-016\nGrade UI Student]
+    end
+
+    subgraph S5[Sprint 5: Admin]
+        T017[TASK-017\nUser Mgmt API]
+        T018[TASK-018\nUser Mgmt UI]
+    end
+
+    subgraph S6[Sprint 6: Jakość]
+        T019[TASK-019\nError Handling]
+        T020[TASK-020\nZod Validation]
+        T021[TASK-021\nHealth Check]
+        T022[TASK-022\nPerformance]
+        T023[TASK-023\nUnit Tests]
+        T024[TASK-024\nIntegration Tests]
+        T025[TASK-025\nE2E Tests]
+    end
+
+    T001 --> T002
+    T001 --> T003
+    T001 --> T004
+    T002 --> T003
+    T003 --> T004
+    T003 --> T006
+    T003 --> T021
+    T004 --> T005
+    T004 --> T007
+    T004 --> T011
+    T004 --> T014
+    T004 --> T017
+    T006 --> T007
+    T006 --> T010
+    T007 --> T008
+    T007 --> T009
+    T007 --> T019
+    T007 --> T020
+    T005 --> T008
+    T005 --> T009
+    T005 --> T018
+    T009 --> T012
+    T010 --> T011
+    T010 --> T013
+    T011 --> T012
+    T013 --> T014
+    T014 --> T015
+    T014 --> T016
+    T014 --> T022
+    T014 --> T023
+    T007 --> T023
+    T010 --> T023
+    T013 --> T023
+    T017 --> T018
+    T017 --> T024
+    T018 --> T025
+    T016 --> T025
+    T012 --> T016
+
+    style T001 fill:#10B981,color:#fff
+    style T002 fill:#10B981,color:#fff
+    style T003 fill:#10B981,color:#fff
+    style T004 fill:#10B981,color:#fff
+    style T005 fill:#10B981,color:#fff
+    style T010 fill:#F59E0B,color:#fff
