@@ -71,6 +71,28 @@ db-generate: ## Generate Prisma client
 	npx prisma generate
 
 # ===========================================
+# Production
+# ===========================================
+
+build: ## Build production Docker image
+	docker build --target runner -t sos:latest .
+
+build-prod: ## Build with docker-compose prod
+	docker-compose -f docker-compose.prod.yml build
+
+prod-up: ## Start production environment
+	docker-compose -f docker-compose.prod.yml up -d
+
+prod-down: ## Stop production environment
+	docker-compose -f docker-compose.prod.yml down
+
+prod-logs: ## View production logs
+	docker-compose -f docker-compose.prod.yml logs -f
+
+prod-migrate: ## Run DB migrations in production
+	docker-compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
+
+# ===========================================
 # Cleanup
 # ===========================================
 

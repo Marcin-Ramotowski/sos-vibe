@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SOS — System Obsługi Studiów
 
-## Getting Started
+Akademicki system obsługi studiów: zapisy na kursy, oceny, zarządzanie użytkownikami.
+Zaprojektowany jako nowoczesna alternatywa dla przestarzałych systemów uczelniaich — prosty, szybki, transakcyjnie bezpieczny.
 
-First, run the development server:
+## Funkcjonalności
+
+| Rola | Możliwości |
+|------|-----------|
+| **Student** | Przeglądanie kursów, zapisy/wypisania (race-condition safe), podgląd ocen |
+| **Wykładowca** | Przeglądanie swoich kursów, lista studentów, wpisywanie ocen z audit logiem |
+| **Admin** | Tworzenie kursów, przypisywanie wykładowców, zarządzanie rolami użytkowników |
+
+## Quick Start
+
+### Wymagania
+
+- Docker & Docker Compose
+- Node.js 22+ (opcjonalnie, dla lokalnego development poza Dockerem)
+
+### Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Sklonuj repozytorium
+git clone <repo-url>
+cd sos
+
+# Skopiuj plik środowiskowy
+cp .env.example .env
+
+# Uruchom środowisko deweloperskie
+make dev
+
+# Aplikacja dostępna pod http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Konta testowe** (po seedzie):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Email | Hasło | Rola |
+|-------|-------|------|
+| `admin@uni.pl` | `admin123` | Admin |
+| `lecturer@uni.pl` | `lecturer123` | Wykładowca |
+| `student@uni.pl` | `student123` | Student |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Uruchamianie testów
 
-## Learn More
+```bash
+make test              # Wszystkie testy
+make test-unit         # Testy jednostkowe
+make test-integration  # Testy integracyjne (wymaga działającej aplikacji)
+make test-e2e          # Testy E2E (wymaga działającej aplikacji)
+make test-coverage     # Raporty pokrycia
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Zmienne środowiskowe
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Zmienna | Wymagana | Opis |
+|---------|----------|------|
+| `DATABASE_URL` | Tak | Connection string do PostgreSQL |
+| `JWT_SECRET` | Tak | Sekret do podpisywania tokenów JWT |
+| `NODE_ENV` | Nie | `development` / `production` (domyślnie: `development`) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Pełna lista w `.env.example`.
 
-## Deploy on Vercel
+## Architektura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Projekt oparty na **Clean Architecture**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── domain/           # Encje, interfejsy repozytoriów, błędy domenowe
+├── application/      # Use cases (logika biznesowa)
+├── infrastructure/   # Implementacje repozytoriów (Prisma), JWT, bcrypt
+└── presentation/     # Route Handlers, middleware, komponenty React
+```
+
+**Stack**: Next.js 15 (App Router) · TypeScript 5 · PostgreSQL 16 · Prisma · Tailwind CSS 4
+
+Szczegóły: [`.prodready/design/architecture/`](.prodready/design/architecture/)
+
+## API
+
+Dokumentacja OpenAPI: [`.prodready/design/api/openapi.yaml`](.prodready/design/api/openapi.yaml)
+
+Główne endpointy:
+
+| Method | Path | Opis |
+|--------|------|------|
+| `POST` | `/api/auth/login` | Logowanie |
+| `POST` | `/api/auth/logout` | Wylogowanie |
+| `GET` | `/api/courses` | Lista kursów |
+| `POST` | `/api/courses` | Utwórz kurs (ADMIN) |
+| `POST` | `/api/enrollments` | Zapisz się na kurs (STUDENT) |
+| `PUT` | `/api/courses/:id/students/:id/grade` | Wystaw ocenę (LECTURER) |
+| `GET` | `/api/health` | Health check |
+
+## Deployment
+
+Przewodnik wdrożenia produkcyjnego: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+```bash
+# Szybki start produkcji
+cp .env.example .env.production
+# Uzupełnij .env.production silnymi hasłami
+make prod-up
+make prod-migrate
+```
+
+## Makefile — wszystkie komendy
+
+```bash
+make help
+```
