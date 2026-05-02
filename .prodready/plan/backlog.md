@@ -5,7 +5,7 @@
 ## Sprint 1: Foundation
 
 ### TASK-001: Project Scaffolding
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Inicjalizacja projektu Next.js 15 z App Router, TypeScript strict mode, ESLint, Prettier oraz Clean Architecture folder structure.
@@ -25,7 +25,7 @@ Inicjalizacja projektu Next.js 15 z App Router, TypeScript strict mode, ESLint, 
 ---
 
 ### TASK-002: Docker Development Setup
-**Priority**: P0 | **Estimate**: 1h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 1h | **Status**: Done
 
 **Description**:
 Docker Compose dla środowiska deweloperskiego: aplikacja + PostgreSQL.
@@ -44,7 +44,7 @@ Docker Compose dla środowiska deweloperskiego: aplikacja + PostgreSQL.
 ---
 
 ### TASK-003: Database Schema & Migrations
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Prisma schema z wszystkimi 5 encjami, migracja inicjalna, seed z danymi testowymi.
@@ -64,7 +64,7 @@ Prisma schema z wszystkimi 5 encjami, migracja inicjalna, seed z danymi testowym
 ---
 
 ### TASK-004: Authentication — Backend
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 JWT auth w HTTP-only cookie: login, logout, middleware RBAC dla wszystkich `/api/*` routes.
@@ -85,7 +85,7 @@ JWT auth w HTTP-only cookie: login, logout, middleware RBAC dla wszystkich `/api
 ---
 
 ### TASK-005: Authentication — UI
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Strona logowania i client-side auth state.
@@ -106,7 +106,7 @@ Strona logowania i client-side auth state.
 ## Sprint 2: Kursy
 
 ### TASK-006: Course — Domain & Application Layer
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Encja Course, interfejs ICourseRepository, use cases dla operacji na kursach.
@@ -126,7 +126,7 @@ Encja Course, interfejs ICourseRepository, use cases dla operacji na kursach.
 ---
 
 ### TASK-007: Course — API Endpoints
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 Route Handlers dla kursów — cienka warstwa wywołująca use cases.
@@ -147,7 +147,7 @@ Route Handlers dla kursów — cienka warstwa wywołująca use cases.
 ---
 
 ### TASK-008: Course — Admin UI
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 Panel admina: tworzenie kursów i przypisywanie wykładowców.
@@ -166,7 +166,7 @@ Panel admina: tworzenie kursów i przypisywanie wykładowców.
 ---
 
 ### TASK-009: Course — Student & Lecturer UI
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Lista kursów dla studenta (z statusem zapisu) i wykładowcy (jego kursy).
@@ -186,7 +186,7 @@ Lista kursów dla studenta (z statusem zapisu) i wykładowcy (jego kursy).
 ## Sprint 3: Zapisy
 
 ### TASK-010: Enrollment — Domain & Application Layer
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 Serce systemu: EnrollmentService z atomowym zapisem odpornym na race conditions.
@@ -211,7 +211,7 @@ Serce systemu: EnrollmentService z atomowym zapisem odpornym na race conditions.
 ---
 
 ### TASK-011: Enrollment — API Endpoints
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Route Handlers dla zapisów — tylko STUDENT.
@@ -228,7 +228,7 @@ Route Handlers dla zapisów — tylko STUDENT.
 ---
 
 ### TASK-012: Enrollment — Student UI
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 EnrollButton na liście kursów i strona "Moje kursy".
@@ -248,7 +248,7 @@ EnrollButton na liście kursów i strona "Moje kursy".
 ## Sprint 4: Oceny
 
 ### TASK-013: Grade — Domain & Application Layer
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Grade entity, GradeAuditLog, use cases dla wystawiania i przeglądania ocen.
@@ -268,7 +268,7 @@ Grade entity, GradeAuditLog, use cases dla wystawiania i przeglądania ocen.
 ---
 
 ### TASK-014: Grade — API Endpoints
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Route Handlers dla ocen.
@@ -284,7 +284,7 @@ Route Handlers dla ocen.
 ---
 
 ### TASK-015: Grade — Lecturer UI
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 Tabela studentów kursu z inline wystawianiem ocen.
@@ -303,7 +303,7 @@ Tabela studentów kursu z inline wystawianiem ocen.
 ---
 
 ### TASK-016: Grade — Student UI
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Widok "Moje oceny" dla studenta.
@@ -322,7 +322,7 @@ Widok "Moje oceny" dla studenta.
 ## Sprint 5: Panel Admina
 
 ### TASK-017: User Management — API
-**Priority**: P1 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Endpointy zarządzania użytkownikami dla admina.
@@ -338,7 +338,7 @@ Endpointy zarządzania użytkownikami dla admina.
 ---
 
 ### TASK-018: User Management — Admin UI
-**Priority**: P1 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Panel admina: lista użytkowników z możliwością zmiany roli.
@@ -358,7 +358,7 @@ Panel admina: lista użytkowników z możliwością zmiany roli.
 ## Sprint 6: Jakość i wykończenie
 
 ### TASK-019: Global Error Handling & Toast
-**Priority**: P1 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Globalny error handler na backendzie i system powiadomień na frontendzie.
@@ -376,7 +376,7 @@ Globalny error handler na backendzie i system powiadomień na frontendzie.
 ---
 
 ### TASK-020: Zod Validation Schemas
-**Priority**: P1 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Kompletne Zod schemas dla wszystkich API endpoints i formularzy.
@@ -394,7 +394,7 @@ Kompletne Zod schemas dla wszystkich API endpoints i formularzy.
 ---
 
 ### TASK-021: Health Check Endpoint
-**Priority**: P1 | **Estimate**: 1h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 1h | **Status**: Done
 
 **Description**:
 `GET /api/health` sprawdzający połączenie z bazą danych.
@@ -410,7 +410,7 @@ Kompletne Zod schemas dla wszystkich API endpoints i formularzy.
 ---
 
 ### TASK-022: Performance Review
-**Priority**: P1 | **Estimate**: 2h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 2h | **Status**: Done
 
 **Description**:
 Przegląd i naprawa N+1 queries, weryfikacja indeksów, connection pooling.
@@ -429,7 +429,7 @@ Przegląd i naprawa N+1 queries, weryfikacja indeksów, connection pooling.
 ---
 
 ### TASK-023: Unit Tests — Domain & Application Layer
-**Priority**: P1 | **Estimate**: 3h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 3h | **Status**: Done
 
 **Description**:
 Testy jednostkowe logiki domenowej i use cases (bez DB, bez HTTP).
@@ -449,7 +449,7 @@ Testy jednostkowe logiki domenowej i use cases (bez DB, bez HTTP).
 ---
 
 ### TASK-024: Integration Tests — API Endpoints
-**Priority**: P1 | **Estimate**: 4h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 4h | **Status**: Done
 
 **Description**:
 Testy integracyjne wszystkich API endpoints z prawdziwą bazą danych testową.
@@ -470,7 +470,7 @@ Testy integracyjne wszystkich API endpoints z prawdziwą bazą danych testową.
 ---
 
 ### TASK-025: E2E Tests — Playwright
-**Priority**: P1 | **Estimate**: 4h | **Status**: Ready
+**Priority**: P1 | **Estimate**: 4h | **Status**: Done
 
 **Description**:
 Testy end-to-end krytycznych user flows przez przeglądarkę.
