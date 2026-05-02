@@ -63,14 +63,14 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
         onClick={() => setOpen(true)}
         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium transition-colors"
       >
-        Dodaj Kurs
+        Utwórz Kurs
       </button>
     )
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <div role="dialog" aria-modal="true" className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Nowy Kurs</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
