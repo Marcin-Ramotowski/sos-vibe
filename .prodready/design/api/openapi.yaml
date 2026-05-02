@@ -1,0 +1,927 @@
+openapi: 3.1.0
+info:
+  title: SOS — System Obsługi Studiów API
+  version: 1.0.0
+  description: |
+    REST API dla systemu obsługi studiów. Obsługuje trzy role: STUDENT, LECTURER, ADMIN.
+    Autoryzacja przez JWT w HTTP-only cookie (ustawiany przez /api/auth/login).
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development
+  - url: https://sos.example.com/api
+    description: Production
+
+tags:
+  - name: auth
+    description: Uwierzytelnianie
+  - name: courses
+    description: Zarządzanie kursami
+  - name: enrollments
+    description: Zapisy studentów na kursy
+  - name: grades
+    description: Oceny
+  - name: users
+    description: Zarządzanie użytkownikami (Admin)
+  - name: health
+    description: Health check
+
+paths:
+
+  # ─────────────────────────────────────────
+  # AUTH
+  # ─────────────────────────────────────────
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Logowanie
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Zalogowano — JWT ustawiony w HTTP-only cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: token=eyJ...; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=86400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Wylogowanie
+      operationId: logout
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Wylogowano — cookie usunięte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Dane zalogowanego użytkownika
+      operationId: getMe
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dane bieżącego użytkownika
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─────────────────────────────────────────
+  # COURSES
+  # ─────────────────────────────────────────
+
+  /courses:
+    get:
+      tags: [courses]
+      summary: Lista kursów
+      description: |
+        - STUDENT: widzi kursy z osobistym statusem (AVAILABLE / ENROLLED / FULL)
+        - LECTURER: widzi kursy, które prowadzi
+        - ADMIN: widzi wszystkie kursy
+      operationId: listCourses
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginowana lista kursów
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [courses]
+      summary: Utwórz kurs
+      description: Tylko ADMIN.
+      operationId: createCourse
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCourseRequest'
+      responses:
+        '201':
+          description: Kurs utworzony
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /courses/{courseId}:
+    get:
+      tags: [courses]
+      summary: Szczegóły kursu
+      operationId: getCourse
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: Szczegóły kursu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /courses/{courseId}/lecturer:
+    patch:
+      tags: [courses]
+      summary: Przypisz wykładowcę do kursu
+      description: Tylko ADMIN.
+      operationId: assignLecturer
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignLecturerRequest'
+      responses:
+        '200':
+          description: Wykładowca przypisany
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /courses/{courseId}/students:
+    get:
+      tags: [courses]
+      summary: Lista studentów w kursie z ocenami
+      description: Tylko LECTURER przypisany do tego kursu lub ADMIN.
+      operationId: getCourseStudents
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginowana lista studentów z ocenami
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseStudentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─────────────────────────────────────────
+  # ENROLLMENTS
+  # ─────────────────────────────────────────
+
+  /enrollments:
+    get:
+      tags: [enrollments]
+      summary: Moje zapisy (student — moje kursy)
+      description: Tylko STUDENT. Zwraca kursy na które jestem zapisany.
+      operationId: getMyEnrollments
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Kursy studenta z ocenami
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyEnrollmentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [enrollments]
+      summary: Zapisz się na kurs
+      description: |
+        Tylko STUDENT. Operacja atomowa — race condition safe.
+        Zwraca 409 jeśli kurs pełny lub student już zapisany.
+      operationId: enroll
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollRequest'
+      responses:
+        '201':
+          description: Zapis potwierdzony
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Konflikt — kurs pełny lub student już zapisany
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                courseFull:
+                  value:
+                    code: COURSE_FULL
+                    message: Brak wolnych miejsc na kursie
+                alreadyEnrolled:
+                  value:
+                    code: ALREADY_ENROLLED
+                    message: Jesteś już zapisany na ten kurs
+
+  /enrollments/{courseId}:
+    delete:
+      tags: [enrollments]
+      summary: Wypisz się z kursu
+      description: |
+        Tylko STUDENT. Zwraca 409 jeśli student ma wystawioną ocenę z tego kursu
+        (ocena jest ostateczna — wypisanie zablokowane).
+      operationId: unenroll
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: Wypisano
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Wypisanie niemożliwe — ocena już wystawiona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: GRADE_EXISTS
+                message: Nie możesz się wypisać — masz wystawioną ocenę z tego kursu
+
+  # ─────────────────────────────────────────
+  # GRADES
+  # ─────────────────────────────────────────
+
+  /grades/mine:
+    get:
+      tags: [grades]
+      summary: Moje oceny
+      description: Tylko STUDENT. Zwraca oceny ze wszystkich kursów studenta.
+      operationId: getMyGrades
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Oceny studenta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyGradesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /courses/{courseId}/students/{studentId}/grade:
+    put:
+      tags: [grades]
+      summary: Wystaw lub zaktualizuj ocenę
+      description: |
+        Tylko LECTURER przypisany do tego kursu.
+        PUT jest idempotentny — tworzy lub aktualizuje ocenę.
+        Każda zmiana tworzy wpis w GradeAuditLog.
+      operationId: upsertGrade
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+        - $ref: '#/components/parameters/StudentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertGradeRequest'
+      responses:
+        '200':
+          description: Ocena zapisana
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─────────────────────────────────────────
+  # USERS (Admin)
+  # ─────────────────────────────────────────
+
+  /users:
+    get:
+      tags: [users]
+      summary: Lista użytkowników
+      description: Tylko ADMIN.
+      operationId: listUsers
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginowana lista użytkowników
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{userId}/role:
+    patch:
+      tags: [users]
+      summary: Zmień rolę użytkownika
+      description: Tylko ADMIN.
+      operationId: changeUserRole
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRoleRequest'
+      responses:
+        '200':
+          description: Rola zmieniona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─────────────────────────────────────────
+  # HEALTH
+  # ─────────────────────────────────────────
+
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System działa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  db:
+                    type: string
+                    example: ok
+
+# ─────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────
+
+components:
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+
+  # ── Parameters ──
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  # ── Schemas ──
+
+  schemas:
+
+    UserRole:
+      type: string
+      enum: [STUDENT, LECTURER, ADMIN]
+
+    GradeValue:
+      type: number
+      enum: [2.0, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
+      description: Polska skala ocen
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+      required: [page, limit, total, totalPages]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Maszynowy kod błędu
+        message:
+          type: string
+          description: Czytelny komunikat
+      required: [code, message]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    # ── Auth ──
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserResponse'
+      required: [user]
+
+    # ── User ──
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, email, firstName, lastName, role, createdAt]
+
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    ChangeRoleRequest:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required: [role]
+
+    # ── Course ──
+
+    EnrollmentStatus:
+      type: string
+      enum: [AVAILABLE, ENROLLED, FULL]
+      description: Status kursu z perspektywy studenta
+
+    CourseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+        enrolledCount:
+          type: integer
+        freeSpots:
+          type: integer
+          description: capacity - enrolledCount
+        lecturer:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/LecturerSummary'
+        enrollmentStatus:
+          $ref: '#/components/schemas/EnrollmentStatus'
+          description: Tylko dla roli STUDENT — null dla LECTURER/ADMIN
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, capacity, enrolledCount, freeSpots, createdAt]
+
+    LecturerSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required: [id, firstName, lastName]
+
+    CourseListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    CreateCourseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+          minimum: 1
+        lecturerId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Opcjonalne — można przypisać później przez PATCH /courses/:id/lecturer
+      required: [name, capacity]
+
+    AssignLecturerRequest:
+      type: object
+      properties:
+        lecturerId:
+          type: string
+          format: uuid
+          nullable: true
+          description: null = odpiąć wykładowcę
+      required: [lecturerId]
+
+    # ── Students in Course ──
+
+    StudentInCourse:
+      type: object
+      properties:
+        studentId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        enrolledAt:
+          type: string
+          format: date-time
+        grade:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/GradeSummary'
+      required: [studentId, firstName, lastName, email, enrolledAt]
+
+    GradeSummary:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/GradeValue'
+        gradedAt:
+          type: string
+          format: date-time
+      required: [value, gradedAt]
+
+    CourseStudentsResponse:
+      type: object
+      properties:
+        courseId:
+          type: string
+          format: uuid
+        courseName:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentInCourse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [courseId, courseName, data, pagination]
+
+    # ── Enrollment ──
+
+    EnrollRequest:
+      type: object
+      properties:
+        courseId:
+          type: string
+          format: uuid
+      required: [courseId]
+
+    EnrollmentResponse:
+      type: object
+      properties:
+        enrollmentId:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        courseName:
+          type: string
+        enrolledAt:
+          type: string
+          format: date-time
+      required: [enrollmentId, courseId, courseName, enrolledAt]
+
+    MyEnrollmentItem:
+      type: object
+      properties:
+        enrollmentId:
+          type: string
+          format: uuid
+        course:
+          $ref: '#/components/schemas/CourseResponse'
+        grade:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/GradeSummary'
+        enrolledAt:
+          type: string
+          format: date-time
+      required: [enrollmentId, course, enrolledAt]
+
+    MyEnrollmentsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEnrollmentItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    # ── Grade ──
+
+    UpsertGradeRequest:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/GradeValue'
+      required: [value]
+
+    GradeResponse:
+      type: object
+      properties:
+        gradeId:
+          type: string
+          format: uuid
+        enrollmentId:
+          type: string
+          format: uuid
+        value:
+          $ref: '#/components/schemas/GradeValue'
+        gradedBy:
+          $ref: '#/components/schemas/LecturerSummary'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [gradeId, enrollmentId, value, gradedBy, createdAt, updatedAt]
+
+    MyGradeItem:
+      type: object
+      properties:
+        courseId:
+          type: string
+          format: uuid
+        courseName:
+          type: string
+        grade:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/GradeSummary'
+      required: [courseId, courseName]
+
+    MyGradesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyGradeItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+  # ── Responses ──
+
+  responses:
+    BadRequest:
+      description: Błędne dane wejściowe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: VALIDATION_ERROR
+            message: Dane wejściowe są niepoprawne
+    Unauthorized:
+      description: Brak lub nieważny token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Wymagane logowanie
+    Forbidden:
+      description: Brak uprawnień dla tej operacji
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: Brak uprawnień do wykonania tej operacji
+    NotFound:
+      description: Zasób nie istnieje
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Zasób nie został znaleziony
