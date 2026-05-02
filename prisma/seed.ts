@@ -1,13 +1,11 @@
 import { PrismaClient, UserRole } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env['DATABASE_URL'] ?? 'postgresql://postgres:postgres@db:5432/sos_dev',
-    },
-  },
-})
+const adapter = new PrismaPg(
+  process.env['DATABASE_URL'] ?? 'postgresql://postgres:postgres@db:5432/sos_dev'
+)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const hash = (pw: string) => bcrypt.hash(pw, 10)
