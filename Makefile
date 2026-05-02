@@ -5,16 +5,16 @@
 # ===========================================
 
 dev: ## Start development environment (Docker)
-	docker-compose up
+	docker compose up
 
 dev-build: ## Rebuild and start development environment
-	docker-compose up --build
+	docker compose up --build
 
 dev-down: ## Stop development environment
-	docker-compose down
+	docker compose down
 
 logs: ## Show app logs
-	docker-compose logs -f app
+	docker compose logs -f app
 
 # ===========================================
 # Testing
@@ -77,27 +77,27 @@ db-generate: ## Generate Prisma client
 build: ## Build production Docker image
 	docker build --target runner -t sos:latest .
 
-build-prod: ## Build with docker-compose prod
-	docker-compose -f docker-compose.prod.yml build
+build-prod: ## Build with docker compose prod
+	docker compose -f docker compose.prod.yml build
 
 prod-up: ## Start production environment
-	docker-compose -f docker-compose.prod.yml up -d
+	docker compose -f docker compose.prod.yml up -d
 
 prod-down: ## Stop production environment
-	docker-compose -f docker-compose.prod.yml down
+	docker compose -f docker compose.prod.yml down
 
 prod-logs: ## View production logs
-	docker-compose -f docker-compose.prod.yml logs -f
+	docker compose -f docker compose.prod.yml logs -f
 
 prod-migrate: ## Run DB migrations in production
-	docker-compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
+	docker compose -f docker compose.prod.yml exec app npx prisma migrate deploy
 
 # ===========================================
 # Cleanup
 # ===========================================
 
 clean: ## Remove build artifacts and containers
-	docker-compose down -v
+	docker compose down -v
 	rm -rf .next coverage playwright-report
 
 # ===========================================
