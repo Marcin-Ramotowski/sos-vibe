@@ -77,7 +77,7 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               {...register('email')}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="email@uczelnia.pl"
             />
             {errors.email && (
@@ -94,7 +94,7 @@ export default function LoginPage() {
               type="password"
               autoComplete="current-password"
               {...register('password')}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
             />
             {errors.password && (
