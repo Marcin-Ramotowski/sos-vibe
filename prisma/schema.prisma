@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  firstName    String
+  lastName     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  taughtCourses Course[]        @relation("LecturerCourses")
+  enrollments   Enrollment[]
+  gradedBy      Grade[]         @relation("GradedBy")
+  auditLogs     GradeAuditLog[] @relation("ChangedBy")
+
+  @@map("users")
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  capacity      Int
+  enrolledCount Int      @default(0)
+  lecturerId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lecturer    User?        @relation("LecturerCourses", fields: [lecturerId], references: [id], onDelete: SetNull)
+  enrollments Enrollment[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  studentId  String
+  courseId   String
+  enrolledAt DateTime @default(now())
+
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  grade   Grade?
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+  @@index([studentId])
+  @@map("enrollments")
+}
+
+model Grade {
+  id           String   @id @default(uuid())
+  enrollmentId String   @unique
+  value        Decimal  @db.Decimal(3, 1)
+  gradedById   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  enrollment Enrollment      @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  gradedBy   User            @relation("GradedBy", fields: [gradedById], references: [id])
+  auditLogs  GradeAuditLog[]
+
+  @@map("grades")
+}
+
+model GradeAuditLog {
+  id           String   @id @default(uuid())
+  gradeId      String
+  enrollmentId String
+  oldValue     Decimal? @db.Decimal(3, 1)
+  newValue     Decimal  @db.Decimal(3, 1)
+  changedById  String
+  changedAt    DateTime @default(now())
+
+  grade     Grade @relation(fields: [gradeId], references: [id])
+  changedBy User  @relation("ChangedBy", fields: [changedById], references: [id])
+
+  @@index([gradeId])
+  @@index([enrollmentId])
+  @@map("grade_audit_logs")
+}

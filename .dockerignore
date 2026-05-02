@@ -1,0 +1,17 @@
+.git
+.gitignore
+node_modules
+.next
+.env
+.env.*
+!.env.example
+coverage
+.nyc_output
+.idea
+.vscode
+*.swp
+.DS_Store
+.prodready
+.claude
+tests/e2e/
+playwright-report/
