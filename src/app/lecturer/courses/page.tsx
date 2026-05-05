@@ -24,35 +24,43 @@ export default function LecturerCoursesPage() {
     }
   }, [page])
 
-  useEffect(() => { fetchCourses() }, [fetchCourses])
+  useEffect(() => {
+    fetchCourses()
+  }, [fetchCourses])
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Moje Kursy</h1>
 
-      {loading && <div className="text-center py-12 text-gray-500">Ładowanie...</div>}
+      {loading && <div className="text-center py-16 text-gray-400">Ładowanie...</div>}
 
       {!loading && data && (
         <>
           {data.data.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-16 text-gray-400">
               Nie masz przypisanych żadnych kursów
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {data.data.map((course) => (
-              <div key={course.id} className="bg-white rounded-lg shadow p-5">
-                <h3 className="font-semibold text-gray-900 text-lg mb-2">{course.name}</h3>
+              <div
+                key={course.id}
+                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+              >
+                <h3 className="font-semibold text-gray-900 text-base mb-2">{course.name}</h3>
                 {course.description && (
-                  <p className="text-sm text-gray-600 mb-3">{course.description}</p>
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{course.description}</p>
                 )}
-                <div className="text-sm text-gray-500 mb-4">
-                  Zapisani: {course.enrolledCount}/{course.capacity}
+                <div className="text-xs text-gray-400 mb-4">
+                  Zapisani:{' '}
+                  <span className="font-medium text-gray-600">
+                    {course.enrolledCount}/{course.capacity}
+                  </span>
                 </div>
                 <Link
                   href={`/lecturer/courses/${course.id}/students`}
-                  className="inline-block text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                  className="inline-block text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   Lista studentów
                 </Link>
@@ -61,21 +69,21 @@ export default function LecturerCoursesPage() {
           </div>
 
           {data.pagination.totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-8 flex justify-center items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Poprzednia
               </button>
-              <span className="px-3 py-1 text-sm text-gray-600">
+              <span className="text-sm text-gray-500">
                 {page} / {data.pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                 disabled={page === data.pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Następna
               </button>

@@ -44,48 +44,53 @@ export default function CourseStudentsPage({
     }
   }, [courseId, page])
 
-  useEffect(() => { fetchStudents() }, [fetchStudents])
+  useEffect(() => {
+    fetchStudents()
+  }, [fetchStudents])
 
   return (
     <div>
       <div className="mb-6">
-        <Link href="/lecturer/courses" className="text-blue-600 hover:underline text-sm">
+        <Link
+          href="/lecturer/courses"
+          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+        >
           ← Wróć do kursów
         </Link>
         <h1 className="text-2xl font-bold text-gray-900 mt-2">Lista Studentów</h1>
       </div>
 
-      {loading && <div className="text-center py-12 text-gray-500">Ładowanie...</div>}
+      {loading && <div className="text-center py-16 text-gray-400">Ładowanie...</div>}
 
       {!loading && data && (
         <>
           {data.data.length === 0 && (
-            <div className="text-center py-12 text-gray-500">Brak studentów na tym kursie</div>
+            <div className="text-center py-16 text-gray-400">Brak studentów na tym kursie</div>
           )}
 
           {data.data.length > 0 && (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-100">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Student
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Ocena
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {data.data.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50">
+                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900">
                         {row.student.firstName} {row.student.lastName}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{row.student.email}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{row.student.email}</td>
                       <td className="px-6 py-4">
                         <GradeSelect
                           courseId={courseId}
@@ -102,21 +107,21 @@ export default function CourseStudentsPage({
           )}
 
           {data.pagination.totalPages > 1 && (
-            <div className="mt-4 flex justify-center gap-2">
+            <div className="mt-6 flex justify-center items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Poprzednia
               </button>
-              <span className="px-3 py-1 text-sm text-gray-600">
+              <span className="text-sm text-gray-500">
                 {page} / {data.pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                 disabled={page === data.pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Następna
               </button>

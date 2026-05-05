@@ -16,9 +16,9 @@ const ROLE_LABELS: Record<UserRole, string> = {
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  STUDENT: 'bg-blue-100 text-blue-800',
-  LECTURER: 'bg-purple-100 text-purple-800',
-  ADMIN: 'bg-red-100 text-red-800',
+  STUDENT: 'bg-blue-100 text-blue-700',
+  LECTURER: 'bg-purple-100 text-purple-700',
+  ADMIN: 'bg-red-100 text-red-700',
 }
 
 export default function AdminUsersPage() {
@@ -37,7 +37,9 @@ export default function AdminUsersPage() {
     }
   }, [page])
 
-  useEffect(() => { fetchUsers() }, [fetchUsers])
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
 
   const handleRoleChange = async (userId: string, role: UserRole) => {
     setUpdating(userId)
@@ -65,37 +67,37 @@ export default function AdminUsersPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Zarządzanie Użytkownikami</h1>
 
-      {loading && <div className="text-center py-12 text-gray-500">Ładowanie...</div>}
+      {loading && <div className="text-center py-16 text-gray-400">Ładowanie...</div>}
 
       {!loading && data && (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Użytkownik
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Rola
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Zmień rolę
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {data.data.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-gray-900">
                         {user.firstName} {user.lastName}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[user.role]}`}
@@ -108,7 +110,7 @@ export default function AdminUsersPage() {
                         value={user.role}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                         disabled={updating === user.id}
-                        className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 bg-white text-gray-700"
                       >
                         <option value="STUDENT">Student</option>
                         <option value="LECTURER">Prowadzący</option>
@@ -122,21 +124,21 @@ export default function AdminUsersPage() {
           </div>
 
           {data.pagination.totalPages > 1 && (
-            <div className="mt-4 flex justify-center gap-2">
+            <div className="mt-6 flex justify-center items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Poprzednia
               </button>
-              <span className="px-3 py-1 text-sm text-gray-600">
+              <span className="text-sm text-gray-500">
                 {page} / {data.pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                 disabled={page === data.pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Następna
               </button>

@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { NavBar } from '@/presentation/components/ui/NavBar'
+import { Sidebar } from '@/presentation/components/ui/Sidebar'
+import { Footer } from '@/presentation/components/ui/Footer'
 import { useAuth } from '@/presentation/hooks/use-auth'
 
 const adminLinks = [
@@ -29,9 +30,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading || !user || user.role !== 'ADMIN') return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar links={adminLinks} />
-      <main className="max-w-7xl mx-auto px-4 py-8">{children}</main>
+    <div className="flex min-h-screen">
+      <Sidebar links={adminLinks} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 p-8 bg-gray-50">{children}</main>
+        <Footer />
+      </div>
     </div>
   )
 }

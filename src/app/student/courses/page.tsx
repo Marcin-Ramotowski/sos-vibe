@@ -10,9 +10,9 @@ interface PaginatedCourses {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  ENROLLED: 'bg-green-100 text-green-800',
-  NOT_ENROLLED: 'bg-gray-100 text-gray-600',
-  FULL: 'bg-red-100 text-red-800',
+  ENROLLED: 'bg-green-100 text-green-700',
+  NOT_ENROLLED: 'bg-gray-100 text-gray-500',
+  FULL: 'bg-red-100 text-red-700',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -36,40 +36,53 @@ export default function StudentCoursesPage() {
     }
   }, [page])
 
-  useEffect(() => { fetchCourses() }, [fetchCourses])
+  useEffect(() => {
+    fetchCourses()
+  }, [fetchCourses])
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dostępne Kursy</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Przedmioty</h1>
 
-      {loading && <div className="text-center py-12 text-gray-500">Ładowanie...</div>}
+      {loading && <div className="text-center py-16 text-gray-400">Ładowanie...</div>}
 
       {!loading && data && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {data.data.map((course) => (
-              <div key={course.id} className="bg-white rounded-lg shadow p-5">
+              <div
+                key={course.id}
+                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+              >
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 text-lg">{course.name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-base leading-snug">
+                    {course.name}
+                  </h3>
                   {course.enrollmentStatus && (
                     <span
-                      className={`ml-2 flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[course.enrollmentStatus]}`}
+                      className={`ml-2 flex-shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[course.enrollmentStatus]}`}
                     >
                       {STATUS_LABEL[course.enrollmentStatus]}
                     </span>
                   )}
                 </div>
                 {course.description && (
-                  <p className="text-sm text-gray-600 mb-3">{course.description}</p>
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{course.description}</p>
                 )}
-                <div className="text-sm text-gray-500 mb-3">
-                  <span>
-                    Miejsca: {course.enrolledCount}/{course.capacity}
-                  </span>
-                  {course.lecturer && (
-                    <span className="ml-3">
-                      Prowadzący: {course.lecturer.firstName} {course.lecturer.lastName}
+                <div className="text-xs text-gray-400 mb-4 space-y-1">
+                  <div>
+                    Miejsca:{' '}
+                    <span className="font-medium text-gray-600">
+                      {course.enrolledCount}/{course.capacity}
                     </span>
+                  </div>
+                  {course.lecturer && (
+                    <div>
+                      Prowadzący:{' '}
+                      <span className="font-medium text-gray-600">
+                        {course.lecturer.firstName} {course.lecturer.lastName}
+                      </span>
+                    </div>
                   )}
                 </div>
                 {course.enrollmentStatus && (
@@ -84,25 +97,25 @@ export default function StudentCoursesPage() {
           </div>
 
           {data.data.length === 0 && (
-            <div className="text-center py-12 text-gray-500">Brak dostępnych kursów</div>
+            <div className="text-center py-16 text-gray-400">Brak dostępnych przedmiotów</div>
           )}
 
           {data.pagination.totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-8 flex justify-center items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Poprzednia
               </button>
-              <span className="px-3 py-1 text-sm text-gray-600">
+              <span className="text-sm text-gray-500">
                 {page} / {data.pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                 disabled={page === data.pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Następna
               </button>

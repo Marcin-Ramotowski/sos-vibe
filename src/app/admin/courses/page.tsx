@@ -25,7 +25,9 @@ export default function AdminCoursesPage() {
     }
   }, [page])
 
-  useEffect(() => { fetchCourses() }, [fetchCourses])
+  useEffect(() => {
+    fetchCourses()
+  }, [fetchCourses])
 
   return (
     <div>
@@ -34,49 +36,57 @@ export default function AdminCoursesPage() {
         <CreateCourseDialog onCreated={fetchCourses} />
       </div>
 
-      {loading && <div className="text-center py-12 text-gray-500">Ładowanie...</div>}
+      {loading && <div className="text-center py-16 text-gray-400">Ładowanie...</div>}
 
       {!loading && data && (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Nazwa
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Prowadzący
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Miejsca
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Akcje
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {data.data.map((course) => (
-                  <tr key={course.id} className="hover:bg-gray-50">
+                  <tr key={course.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-medium text-gray-900">{course.name}</div>
                       {course.description && (
-                        <div className="text-sm text-gray-500 mt-1 truncate max-w-xs">
+                        <div className="text-sm text-gray-400 mt-0.5 truncate max-w-xs">
                           {course.description}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {course.lecturer
-                        ? `${course.lecturer.firstName} ${course.lecturer.lastName}`
-                        : <span className="text-gray-400 italic">Brak</span>}
+                      {course.lecturer ? (
+                        `${course.lecturer.firstName} ${course.lecturer.lastName}`
+                      ) : (
+                        <span className="text-gray-400 italic">Brak</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <span className={course.enrolledCount >= course.capacity ? 'text-red-600 font-medium' : ''}>
+                    <td className="px-6 py-4 text-sm">
+                      <span
+                        className={
+                          course.enrolledCount >= course.capacity
+                            ? 'text-red-600 font-semibold'
+                            : 'text-gray-600'
+                        }
+                      >
                         {course.enrolledCount}
                       </span>
-                      /{course.capacity}
+                      <span className="text-gray-400">/{course.capacity}</span>
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <AssignLecturerDialog
@@ -92,22 +102,26 @@ export default function AdminCoursesPage() {
             </table>
           </div>
 
+          {data.data.length === 0 && (
+            <div className="text-center py-16 text-gray-400">Brak kursów</div>
+          )}
+
           {data.pagination.totalPages > 1 && (
-            <div className="mt-4 flex justify-center gap-2">
+            <div className="mt-6 flex justify-center items-center gap-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Poprzednia
               </button>
-              <span className="px-3 py-1 text-sm text-gray-600">
+              <span className="text-sm text-gray-500">
                 {page} / {data.pagination.totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                 disabled={page === data.pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Następna
               </button>

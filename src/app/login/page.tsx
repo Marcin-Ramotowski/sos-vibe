@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Footer } from '@/presentation/components/ui/Footer'
 
 const loginSchema = z.object({
   email: z.email('Nieprawidłowy adres email'),
@@ -44,7 +45,6 @@ export default function LoginPage() {
 
       toast.success(`Witaj, ${body.firstName}!`)
 
-      // Redirect based on role
       if (body.role === 'ADMIN') {
         router.push('/admin/courses')
       } else if (body.role === 'LECTURER') {
@@ -60,64 +60,68 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">SOS</h1>
-          <p className="text-gray-600 mt-2">System Obsługi Studiów</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              {...register('email')}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="email@uczelnia.pl"
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-            )}
+    <div
+      className="min-h-screen flex flex-col bg-cover bg-center"
+      style={{ backgroundImage: "url('/bg-field.jpg')" }}
+    >
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">SOS</h1>
+            <p className="text-gray-500 mt-1 text-sm">System Obsługi Studiów</p>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Hasło
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              {...register('password')}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="••••••••"
-            />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-            )}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+                className={`w-full bg-gray-100 rounded-full px-5 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border-0 ${
+                  errors.email ? 'ring-2 ring-red-400' : ''
+                }`}
+                placeholder="Email"
+              />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-500 px-2">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                {...register('password')}
+                className={`w-full bg-gray-100 rounded-full px-5 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border-0 ${
+                  errors.password ? 'ring-2 ring-red-400' : ''
+                }`}
+                placeholder="Hasło"
+              />
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red-500 px-2">{errors.password.message}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              {loading ? 'Logowanie...' : 'Zaloguj się'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-xs text-gray-400 text-center space-y-1">
+            <p className="font-medium text-gray-500 mb-1">Konta testowe</p>
+            <p>Admin: admin@uni.pl / admin123</p>
+            <p>Prowadzący: lecturer@uni.pl / lecturer123</p>
+            <p>Student: student@uni.pl / student123</p>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-          >
-            {loading ? 'Logowanie...' : 'Zaloguj się'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-sm text-gray-500 text-center">
-          <p className="font-medium mb-2">Konta testowe:</p>
-          <p>Admin: admin@uni.pl / admin123</p>
-          <p>Prowadzący: lecturer@uni.pl / lecturer123</p>
-          <p>Student: student@uni.pl / student123</p>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

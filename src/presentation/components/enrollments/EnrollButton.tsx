@@ -63,7 +63,7 @@ export function EnrollButton({ courseId, status, onStatusChange }: EnrollButtonP
       <button
         onClick={handleUnenroll}
         disabled={loading}
-        className="px-3 py-1 text-sm bg-red-100 text-red-700 border border-red-300 rounded hover:bg-red-200 disabled:opacity-50 transition-colors"
+        className="px-3 py-1.5 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors font-medium"
       >
         {loading ? '...' : 'Wypisz się'}
       </button>
@@ -72,7 +72,7 @@ export function EnrollButton({ courseId, status, onStatusChange }: EnrollButtonP
 
   if (status === 'FULL') {
     return (
-      <span className="px-3 py-1 text-sm bg-gray-100 text-gray-500 rounded border">
+      <span className="px-3 py-1.5 text-sm bg-gray-100 text-gray-400 rounded-lg border border-gray-200 font-medium">
         Brak miejsc
       </span>
     )
@@ -82,7 +82,7 @@ export function EnrollButton({ courseId, status, onStatusChange }: EnrollButtonP
     <button
       onClick={handleEnroll}
       disabled={loading}
-      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+      className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
     >
       {loading ? '...' : 'Zapisz się'}
     </button>
