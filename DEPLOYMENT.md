@@ -65,8 +65,8 @@ make prod-up
 make prod-migrate
 
 # Sprawdź status
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs app
+docker compose -f compose.yaml -f compose.prod.yaml ps
+docker compose -f compose.yaml -f compose.prod.yaml logs app
 ```
 
 ### Krok 4: Weryfikacja
@@ -137,14 +137,14 @@ make prod-migrate
 make prod-logs
 
 # Restart
-docker compose -f docker-compose.prod.yml restart app
+docker compose -f compose.yaml -f compose.prod.yaml restart app
 
 # Backup bazy danych
-docker compose -f docker-compose.prod.yml exec db \
+docker compose -f compose.yaml -f compose.prod.yaml exec db \
   pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup_$(date +%Y%m%d).sql
 
 # Przywracanie backupu
-docker compose -f docker-compose.prod.yml exec -T db \
+docker compose -f compose.yaml -f compose.prod.yaml exec -T db \
   psql -U $POSTGRES_USER $POSTGRES_DB < backup_20240101.sql
 ```
 
@@ -175,7 +175,7 @@ Docker health check jest skonfigurowany — nieprawidłowy stan kontenera pojawi
 ### Aplikacja nie startuje
 
 ```bash
-docker compose -f docker-compose.prod.yml logs app
+docker compose -f compose.yaml -f compose.prod.yaml logs app
 ```
 
 Najczęstsze przyczyny:
@@ -186,13 +186,13 @@ Najczęstsze przyczyny:
 ### Błąd połączenia z bazą
 
 ```bash
-docker compose -f docker-compose.prod.yml exec db psql -U $POSTGRES_USER -d $POSTGRES_DB -c '\l'
+docker compose -f compose.yaml -f compose.prod.yaml exec db psql -U $POSTGRES_USER -d $POSTGRES_DB -c '\l'
 ```
 
 ### Reset bazy (UWAGA: usuwa dane)
 
 ```bash
-docker compose -f docker-compose.prod.yml down -v
+docker compose -f compose.yaml -f compose.prod.yaml down -v
 make prod-up
 make prod-migrate
 ```
