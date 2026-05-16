@@ -159,6 +159,7 @@ describe('ListCoursesUseCase', () => {
     expect(courseRepo.findAllWithEnrollmentStatus).toHaveBeenCalledWith(
       { page: 1, limit: 20 },
       'user-1',
+      { search: undefined, lecturerId: undefined, available: undefined },
     )
     expect(courseRepo.findAll).not.toHaveBeenCalled()
   })

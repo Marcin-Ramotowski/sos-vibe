@@ -7,12 +7,19 @@ export interface CreateCourseData {
   capacity: number
 }
 
+export interface CourseFilterParams {
+  search?: string
+  lecturerId?: string
+  available?: boolean
+}
+
 export interface ICourseRepository {
   findById(id: string): Promise<CourseWithLecturer | null>
   findAll(params: PaginationParams): Promise<PaginatedResult<CourseWithLecturer>>
   findAllWithEnrollmentStatus(
     params: PaginationParams,
     studentId: string,
+    filters?: CourseFilterParams,
   ): Promise<PaginatedResult<CourseWithStatus>>
   findByLecturerId(lecturerId: string, params: PaginationParams): Promise<PaginatedResult<CourseWithLecturer>>
   create(data: CreateCourseData): Promise<Course>

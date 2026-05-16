@@ -3,20 +3,41 @@ import type { UserRole } from '@/domain/entities/user.entity'
 import { PrismaCourseRepository } from '@/infrastructure/repositories/PrismaCourseRepository'
 import { ListCoursesUseCase } from '@/application/use-cases/courses/ListCoursesUseCase'
 import { CreateCourseUseCase } from '@/application/use-cases/courses/CreateCourseUseCase'
-import { createCourseSchema } from '@/presentation/api/schemas/course.schema'
-import { parsePagination } from '@/presentation/api/pagination'
+import { createCourseSchema, courseQuerySchema } from '@/presentation/api/schemas/course.schema'
 import { handleApiError } from '@/presentation/api/error-handler'
 import { ForbiddenError } from '@/domain/errors'
 
 export async function GET(request: NextRequest) {
+  const parsed = courseQuerySchema.safeParse(
+    Object.fromEntries(request.nextUrl.searchParams.entries()),
+  )
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        code: 'VALIDATION_ERROR',
+        message: 'Nieprawidłowe parametry zapytania',
+        errors: parsed.error.issues.map((i) => ({ path: i.path, message: i.message })),
+      },
+      { status: 422 },
+    )
+  }
+
   try {
     const userId = request.headers.get('x-user-id')!
     const userRole = request.headers.get('x-user-role') as UserRole
-    const params = parsePagination(request.nextUrl.searchParams)
+    const { page, limit, search, available, lecturerId } = parsed.data
 
     const courseRepo = new PrismaCourseRepository()
     const useCase = new ListCoursesUseCase(courseRepo)
-    const result = await useCase.execute({ ...params, role: userRole, userId })
+    const result = await useCase.execute({
+      page,
+      limit,
+      role: userRole,
+      userId,
+      search,
+      available,
+      lecturerId,
+    })
 
     return NextResponse.json(result)
   } catch (error) {

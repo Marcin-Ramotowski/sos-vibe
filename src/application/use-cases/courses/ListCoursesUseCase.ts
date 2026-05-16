@@ -1,4 +1,4 @@
-import type { ICourseRepository } from '@/domain/repositories/ICourseRepository'
+import type { ICourseRepository, CourseFilterParams } from '@/domain/repositories/ICourseRepository'
 import type { PaginationParams, PaginatedResult } from '@/domain/repositories/IUserRepository'
 import type { CourseWithLecturer, CourseWithStatus } from '@/domain/entities/course.entity'
 import type { UserRole } from '@/domain/entities/user.entity'
@@ -8,6 +8,9 @@ export interface ListCoursesInput {
   limit: number
   role: UserRole
   userId: string
+  search?: string
+  lecturerId?: string
+  available?: boolean
 }
 
 export class ListCoursesUseCase {
@@ -19,7 +22,12 @@ export class ListCoursesUseCase {
     const params: PaginationParams = { page: input.page, limit: input.limit }
 
     if (input.role === 'STUDENT') {
-      return this.courseRepo.findAllWithEnrollmentStatus(params, input.userId)
+      const filters: CourseFilterParams = {
+        search: input.search,
+        lecturerId: input.lecturerId,
+        available: input.available,
+      }
+      return this.courseRepo.findAllWithEnrollmentStatus(params, input.userId, filters)
     }
 
     if (input.role === 'LECTURER') {
