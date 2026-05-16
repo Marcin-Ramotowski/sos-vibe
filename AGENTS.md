@@ -35,6 +35,10 @@ The framework is stack-agnostic (Node, .NET, Rails, Go, Python, Rust — all wor
 
 Then run `/discover-standards` on your codebase to generate your first standards. Do not copy standards from other projects — they must emerge from your own code.
 
+## Archived Material
+
+`docs/archive/**` contains historical material only. Agents must not read or rely on files in this directory for current product, architecture, API, test, or implementation decisions unless the user explicitly asks for historical context.
+
 ## Workflow Orchestration
 
 ### 1. Specification and plan before coding

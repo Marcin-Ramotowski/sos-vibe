@@ -80,7 +80,7 @@ Szczegóły: [`.prodready/design/architecture/`](.prodready/design/architecture/
 
 ## API
 
-Dokumentacja OpenAPI: [`.prodready/design/api/openapi.yaml`](.prodready/design/api/openapi.yaml)
+Dokumentacja API: [`docs/api.md`](./docs/api.md)
 
 Główne endpointy:
 
