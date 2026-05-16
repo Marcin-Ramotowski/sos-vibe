@@ -6,3 +6,49 @@
 #
 # See ./examples/ for reference format — do NOT copy those into your project;
 # generate your own.
+
+api:
+  authorization:
+    description: "Autoryzacja przez x-user-role header z middleware; throw ForbiddenError, nie return"
+  response-format:
+    description: "Sukces = surowe dane (bez koperty); błąd = { code, message }; lista = { data, pagination }"
+  route-structure:
+    description: "Szkielet Route Handlera: headers → role check → Zod → use case → JSON; catch zawsze handleApiError"
+  validation:
+    description: "Zod safeParse, status 422, lista errors; schemat w presentation/api/schemas/"
+
+auth:
+  auth-patterns:
+    description: "JWT w HTTP-only cookie (jose, 7d, secure:prod); JWTPayload z pełnym profilem; neutralny błąd logowania; bcryptjs SALT_ROUNDS=10"
+
+database:
+  decimal-fields:
+    description: "Pola @db.Decimal zwracane jako obiekt Decimal — zawsze konwertuj Number(g.value)"
+  pagination:
+    description: "Promise.all([findMany, count]) równolegle; skip/take/orderBy; zwraca { data, pagination }"
+  repository-pattern:
+    description: "I{Entity}Repository w domain/ (port) + Prisma{Entity}Repository w infrastructure/ (adapter) z mapXxx()"
+  transactions:
+    description: "$transaction(async tx) dla multi-step; $executeRaw tylko dla atomowego conditional UPDATE (enrollment)"
+
+domain:
+  domain-validation:
+    description: "Reguły biznesowe jako pure functions w pliku encji (isValidGrade, VALID_GRADES as const)"
+  entities:
+    description: "Encje domenowe to czyste TypeScript interface; kompozycja przez extends; zero frameworka"
+  errors:
+    description: "DomainError z code (SCREAMING_SNAKE_CASE); wszystkie w errors/index.ts; mapowane na HTTP w handleApiError"
+  use-cases:
+    description: "Klasa z konstruktorem readonly repo-interfejsów i jedną metodą execute(input): Promise<output>"
+
+global:
+  naming-conventions:
+    description: "Aliasy @/ zawsze zamiast ../; import type dla typów; nazewnictwo plików per warstwa"
+
+testing:
+  integration-helpers:
+    description: "login() + authFetch() helpery lokalne w pliku; beforeAll tworzy dane przez API, nie Prisma"
+  test-structure:
+    description: "unit/ = zero Prisma/HTTP (stuby); integration/ = HTTP na żywej apce; e2e/ = Playwright"
+  unit-stubs:
+    description: "makeXxxRepo(overrides) factory z vi.fn() dla każdej metody interfejsu; jeden stub per interfejs"
