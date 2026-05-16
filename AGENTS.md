@@ -217,68 +217,75 @@ Order: `spec ready → TaskCreate (all steps) → TaskUpdate (dependencies) → 
 
 ## Project Layout
 
-<!--
-Fill in after running /discover-standards on your codebase.
-Describe the high-level folder layout and which package/app does what.
+Modular Monolith with Clean Architecture — single Next.js 15 (App Router) project.
 
-Example (Node.js monorepo):
-  apps/api/        # Backend HTTP API
-  apps/web/        # Frontend SPA
-  apps/worker/     # Background job runner
-  packages/shared/ # Code shared between apps
+```
+src/
+├── domain/              # Pure domain logic — ZERO framework dependencies
+│   ├── entities/        # User, Course, Enrollment, Grade, GradeAuditLog
+│   ├── repositories/    # Interfaces (ports) — ICourseRepository etc.
+│   ├── services/        # Domain services — EnrollmentService (race condition logic)
+│   └── errors/          # Domain errors — CourseFullError, AlreadyEnrolledError
+├── application/         # Use cases — domain orchestration
+│   ├── use-cases/       # EnrollStudentUseCase, AssignGradeUseCase etc.
+│   └── dtos/            # Input/Output DTOs
+├── infrastructure/      # Adapters — Prisma, auth
+│   ├── auth/            # JWT via jose (HttpOnly cookies)
+│   ├── database/        # Prisma client
+│   └── repositories/    # Implementations of ICourseRepository etc.
+└── presentation/        # Next.js — thin HTTP layer
+    ├── api/             # Validation schemas (Zod)
+    ├── components/      # React UI components (shadcn/ui)
+    └── hooks/           # React hooks
 
-Example (.NET solution):
-  src/Api/              # ASP.NET Core Web API
-  src/Application/      # Use cases, application services
-  src/Domain/           # Entities, domain logic
-  src/Infrastructure/   # EF Core, external integrations
-  tests/                # xUnit / NUnit test projects
+src/app/                 # Next.js App Router (pages, layouts, Route Handlers)
+├── api/                 # Route Handlers — auth, courses, enrollments, grades, users
+├── admin/               # Admin panel pages (courses, users)
+├── lecturer/            # Lecturer pages (courses, students, grades)
+├── student/             # Student pages (courses, my-courses, grades)
+└── login/               # Login page
 
-Example (Ruby on Rails):
-  app/controllers/  # HTTP endpoints
-  app/models/       # ActiveRecord models
-  app/views/        # ERB templates
-  app/services/     # Service objects (business logic)
-  app/jobs/         # ActiveJob background jobs
-  config/           # routes.rb, database.yml, initializers
--->
+prisma/
+├── schema.prisma        # Database schema
+└── migrations/          # PostgreSQL migration history
 
-_(fill in)_
+tests/
+├── unit/                # Domain and use case tests (no DB, no HTTP)
+├── integration/         # Tests against a real database
+└── e2e/                 # Playwright — full user flow through browser
+```
+
+**Dependency rule:** `Presentation → Application → Domain ← Infrastructure`
+Domain has no knowledge of Prisma. Application has no knowledge of Next.js. Route Handlers call only use cases.
 
 ## Tech Stack
 
-<!--
-Fill in the runtime, framework, DB, styling, linter/formatter, and any other
-first-class tools agents must be aware of.
-
-Example (Node.js):  Node.js 22, Fastify, PostgreSQL (Prisma), Tailwind, ESLint + Prettier
-Example (.NET):     .NET 9, ASP.NET Core, EF Core, SQL Server, dotnet format
-Example (Rails):    Ruby 3.3, Rails 7.2, PostgreSQL, ActiveRecord, RuboCop, Standard
-Example (Go):       Go 1.23, Chi router, pgx, goose migrations, gofmt, golangci-lint
-Example (Python):   Python 3.12, FastAPI, SQLAlchemy, Alembic, ruff, black
--->
-
-_(fill in)_
+| Layer | Technology |
+|-------|------------|
+| Language | TypeScript 5.x |
+| Runtime | Node.js 22 LTS |
+| Framework | Next.js 15 (App Router) — full-stack monolith (SSR + API Route Handlers) |
+| Database | PostgreSQL 16 — ACID, FK, SELECT FOR UPDATE |
+| ORM | Prisma 6 — type-safe queries, migrations, `$transaction` |
+| UI | shadcn/ui + Tailwind CSS 4 |
+| Auth | `jose` — JWT in HttpOnly + Secure + SameSite=Lax cookie; RBAC via role in JWT payload |
+| Validation | Zod |
+| Forms | react-hook-form + @hookform/resolvers |
+| Logging | pino (structured JSON) |
+| Linting | ESLint 9 + eslint-config-next |
+| Unit / Integration tests | Vitest 4 |
+| E2E tests | Playwright 1 |
+| Containerization | Docker + Docker Compose (compose.yaml / compose.prod.yaml) |
 
 ## Commands
 
-<!--
-Fill in the commands agents should use to run, build, test, and lint the project.
-Keep this table small — only the commands used during normal development.
-
-Example (Node.js):  bun dev / bun run build / bun test / biome check --write
-Example (.NET):     dotnet run / dotnet build / dotnet test / dotnet format
-Example (Rails):    bin/dev / bin/rails assets:precompile / bin/rails test / bundle exec rubocop -A
-Example (Go):       go run ./cmd/server / go build ./... / go test ./... / golangci-lint run --fix
-Example (Python):   uvicorn main:app / python -m build / pytest / ruff check --fix && ruff format
--->
-
 | Action | Command |
 |---|---|
-| Dev | _(fill in)_ |
-| Build | _(fill in)_ |
-| Test | _(fill in)_ |
-| Lint / Format | _(fill in)_ |
+| Dev | `docker compose up` (full environment) or `npm run dev` (local Node, no Docker) |
+| Build | `npm run build` |
+| Test | `npm test` (all) · `npm run test:unit` · `npm run test:integration` · `npm run test:e2e` |
+| Lint / Format | `npm run lint` · `npx prettier --write .` · `npx tsc --noEmit` (typecheck) |
+| DB | `npx prisma migrate dev` (migrations) · `npx prisma db seed` (seed) · `npx prisma studio` (GUI) |
 
 ## Coding Standards
 
@@ -430,38 +437,23 @@ Task(subagent_type=codebase-pattern-finder):
 - **NEVER invent URLs.** If a spec or code needs an external URL — ask the user for the real link or verify it exists via WebFetch. Hallucinated URLs are a real problem — many sites return custom pages (not 404) for non-existent paths, making fake links hard to detect later.
 - **Use Context7 for library documentation**, not training-data memory — library APIs drift and your recall can be stale.
 
-<!--
-Add your project's own gotchas below as you discover them — conventions, traps,
-and implicit rules only you/your team know. Keep each bullet short; link to a
-standard or guardrail for anything that needs more words.
-Examples:
-- Runtime is Bun, not Node.js — do NOT use `npm`/`npx`
-- Database columns are snake_case, TypeScript fields are camelCase
-- Never import from `legacy/` — that directory is scheduled for deletion
--->
-
-_(add project-specific gotchas here)_
+- **Route Handlers must be thin** — HTTP validation + use case call + response mapping only. Zero business logic in `src/app/api/`.
+- **Enrollment uses an atomic SQL update** (`UPDATE ... WHERE enrolled_count < capacity RETURNING id`) — do not use a plain Prisma `update`; always wrap in `$transaction`.
+- **Auth is an HttpOnly cookie** — the browser JS cannot access the token; verification happens server-side only (middleware / Route Handler).
+- **Domain must not import Prisma** — an `@prisma/client` import anywhere under `src/domain/` is an architecture violation.
+- **Unit tests must run without DB and without HTTP** — if a test in `tests/unit/` requires Prisma, it belongs in `tests/integration/`.
 
 ## Where to Look
 
-<!--
-Fill in paths to the most important directories in your project.
-This table is used by agents during "Analogy Discovery" and "Code Pattern Finder".
-If an area doesn't exist in your project, delete the row.
-
-Example (Node.js):  api routes = src/routes/, DB = src/db/, UI = src/components/
-Example (.NET):     HTTP handlers = src/Api/Controllers/, DB = src/Infrastructure/Persistence/, UI = src/Web/Pages/
-Example (Rails):    HTTP handlers = app/controllers/, DB = app/models/ + db/migrate/, UI = app/views/
-Example (Go):       HTTP handlers = internal/handlers/, DB = internal/store/, Tests = *_test.go next to code
-Example (Python):   HTTP handlers = app/routers/, DB = app/models/ + alembic/versions/, Tests = tests/
--->
-
 | What | Where |
 |------|-------|
-| API routes / HTTP handlers (e.g. controllers, route files) | _(fill in)_ |
-| DB models / queries / migrations | _(fill in)_ |
-| Frontend pages / routes (delete row if backend-only) | _(fill in)_ |
-| Frontend state management (delete row if server-rendered or backend-only) | _(fill in)_ |
-| UI components / views / templates | _(fill in)_ |
-| Tests | _(fill in)_ |
-| i18n / translations (delete row if not applicable) | _(fill in)_ |
+| API routes / HTTP handlers | `src/app/api/` (Route Handlers Next.js) |
+| Domain logic (entities, services, errors) | `src/domain/` |
+| Use cases (application layer) | `src/application/use-cases/` |
+| DB schema / migrations | `prisma/schema.prisma`, `prisma/migrations/` |
+| DB repository implementations | `src/infrastructure/repositories/` |
+| Frontend pages / layouts | `src/app/` (admin/, lecturer/, student/, login/) |
+| UI components | `src/presentation/components/` |
+| Zod validation schemas | `src/presentation/api/schemas/` |
+| Auth infrastructure | `src/infrastructure/auth/` |
+| Tests | `tests/unit/`, `tests/integration/`, `tests/e2e/` |
