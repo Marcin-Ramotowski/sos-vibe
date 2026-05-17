@@ -83,6 +83,20 @@ A change is complete ONLY when:
 - [ ] Every new rule introduced during implementation has been captured via `/sync-standards` or an entry in this file
 - [ ] The spec file (if any) has its `## Implementation Checklist` updated
 
+## Verify gate rules
+
+Binary PR gates — each is either **PASS** or **BLOCK**. No partial credit, no exceptions.
+
+| # | Rule | Command / Check | Blocks when |
+|---|------|-----------------|-------------|
+| 1 | Build must pass | `npm run build` | Exit code ≠ 0 or any TypeScript / Next.js compilation error |
+| 2 | Lint and types must be clean | `npm run lint && npx tsc --noEmit` | Any ESLint error or type error — warnings are not a pass |
+| 3 | All tests must be green | `npm test` | Any failing test, including tests unrelated to the change |
+| 4 | AC coverage for `implemented` features *(project-specific)* | `grep -r "AC-NNN-M" tests/` for each AC in FEATURES.md | A feature is marked `implemented` in `FEATURES.md` but any of its `AC-NNN-M` IDs is absent from `tests/` or the matching test is failing |
+| 5 | Enrollment changes require real-DB integration test *(project-specific)* | Code review + `npm run test:integration` | A PR modifies `PrismaEnrollmentRepository`, `EnrollmentService`, or any enrollment Route Handler and does NOT include or update an integration test against a real PostgreSQL connection — mocked enrollment tests do not satisfy this rule (see ADR-004) |
+
+> **Rule 4 explained:** open `FEATURES.md`, find every `AC-NNN-M` for the feature being marked `implemented`, run `grep -rn "AC-NNN-M" tests/` for each ID. If any grep returns zero results, or the matched test is failing, the PR is blocked. The feature status stays `in-progress`.
+
 ## Architectural decisions
 
 ### ADR-001 — Next.js 15 (App Router) as the full-stack framework
