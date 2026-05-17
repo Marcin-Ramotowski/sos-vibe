@@ -13,9 +13,9 @@ test.describe('Enrollment', () => {
   test('should show available courses with enrollment status badges', async ({ page }) => {
     await page.goto('/student/courses')
     // Wait for courses to load
-    await page.waitForSelector('[class*="bg-white rounded-lg shadow"]', { timeout: 5000 })
+    await page.waitForSelector('[class*="bg-white rounded-xl border"]', { timeout: 5000 })
     // Should have some courses visible
-    const courses = page.locator('[class*="bg-white rounded-lg shadow p-5"]')
+    const courses = page.locator('[class*="bg-white rounded-xl border border-gray-200 p-5"]')
     await expect(courses.first()).toBeVisible()
   })
 

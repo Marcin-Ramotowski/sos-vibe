@@ -42,7 +42,7 @@ export default function StudentGradesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Oceny</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Moje Oceny</h1>
         {average && (
           <div className="bg-white rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700">
             Średnia:{' '}
