@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/presentation/hooks/use-auth'
 
@@ -14,6 +15,17 @@ interface NavBarProps {
 
 export function NavBar({ links }: NavBarProps) {
   const { user, loading, logout } = useAuth()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return }
+    fetch('/api/notifications')
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: unknown) => {
+        setUnreadCount(Array.isArray(data) ? (data as unknown[]).length : 0)
+      })
+      .catch(() => {}) // badge silently fails — non-critical
+  }, [user])
 
   if (loading) return null
 
@@ -34,6 +46,14 @@ export function NavBar({ links }: NavBarProps) {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        {unreadCount > 0 && (
+          <div className="relative">
+            <span className="text-xl" aria-label="Powiadomienia">🔔</span>
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          </div>
+        )}
         {user && (
           <span className="text-sm text-blue-100">
             {user.firstName} {user.lastName}

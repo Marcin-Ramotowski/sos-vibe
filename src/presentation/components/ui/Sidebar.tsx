@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/presentation/hooks/use-auth'
@@ -16,6 +17,17 @@ interface SidebarProps {
 export function Sidebar({ links }: SidebarProps) {
   const { user, loading, logout } = useAuth()
   const pathname = usePathname()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return }
+    fetch('/api/notifications')
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: unknown) => {
+        setUnreadCount(Array.isArray(data) ? (data as unknown[]).length : 0)
+      })
+      .catch(() => {}) // badge silently fails — non-critical
+  }, [user])
 
   if (loading) return null
 
@@ -35,11 +47,19 @@ export function Sidebar({ links }: SidebarProps) {
           {initials}
         </div>
         {user && (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-gray-900 truncate">
               {user.firstName} {user.lastName}
             </div>
             <div className="text-xs text-gray-500 truncate">{user.email}</div>
+          </div>
+        )}
+        {unreadCount > 0 && (
+          <div className="relative flex-shrink-0">
+            <span className="text-lg" aria-label="Powiadomienia">🔔</span>
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
           </div>
         )}
       </div>
