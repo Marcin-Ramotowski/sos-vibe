@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'http://localhost:3110'
 
 async function login(email: string, password: string): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/auth/login`, {

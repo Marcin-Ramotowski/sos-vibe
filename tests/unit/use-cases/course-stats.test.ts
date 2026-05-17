@@ -17,6 +17,7 @@ const makeCourseRepo = (overrides: Partial<ICourseRepository> = {}): ICourseRepo
   findAllWithEnrollmentStatus: vi.fn(),
   findByLecturerId: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
   assignLecturer: vi.fn(),
   getStudentList: vi.fn(),
   ...overrides,
@@ -29,6 +30,9 @@ const mockCourse = {
   capacity: 30,
   enrolledCount: 5,
   lecturerId: 'lecturer-1',
+  startDate: null,
+  endDate: null,
+  enrollmentDeadline: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   lecturer: {
