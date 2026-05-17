@@ -47,10 +47,10 @@ async function main() {
   })
 
   await prisma.course.upsert({
-    where: { id: 'seed-course-1' },
+    where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {},
     create: {
-      id: 'seed-course-1',
+      id: '00000000-0000-0000-0000-000000000001',
       name: 'Algebra Liniowa',
       description: 'Podstawy algebry liniowej: wektory, macierze, układy równań',
       capacity: 30,
@@ -59,10 +59,10 @@ async function main() {
   })
 
   await prisma.course.upsert({
-    where: { id: 'seed-course-2' },
+    where: { id: '00000000-0000-0000-0000-000000000002' },
     update: {},
     create: {
-      id: 'seed-course-2',
+      id: '00000000-0000-0000-0000-000000000002',
       name: 'Analiza Matematyczna',
       description: 'Rachunek różniczkowy i całkowy',
       capacity: 25,
@@ -71,10 +71,10 @@ async function main() {
   })
 
   await prisma.course.upsert({
-    where: { id: 'seed-course-3' },
+    where: { id: '00000000-0000-0000-0000-000000000003' },
     update: {},
     create: {
-      id: 'seed-course-3',
+      id: '00000000-0000-0000-0000-000000000003',
       name: 'Wprowadzenie do Programowania',
       description: 'Podstawy programowania w Python',
       capacity: 2,
