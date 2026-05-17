@@ -277,7 +277,7 @@ Pełny kurs dziś oznacza brak możliwości zapisu bez interwencji admina. Waitl
 ---
 
 ## [FEAT-010] Terminy kursów i okno zapisów
-**Status:** backlog
+**Status:** implemented
 **Size:** L
 **Added:** 2026-05-17
 
@@ -313,7 +313,7 @@ Brak terminów oznacza, że student może zapisać się na kurs dowolnie późno
 ---
 
 ## [FEAT-011] System powiadomień in-app
-**Status:** backlog
+**Status:** implemented
 **Size:** L
 **Added:** 2026-05-17
 
