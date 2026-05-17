@@ -52,11 +52,21 @@ export default function LecturerCoursesPage() {
                 {course.description && (
                   <p className="text-sm text-gray-500 mb-3 line-clamp-2">{course.description}</p>
                 )}
-                <div className="text-xs text-gray-400 mb-4">
-                  Zapisani:{' '}
-                  <span className="font-medium text-gray-600">
-                    {course.enrolledCount}/{course.capacity}
-                  </span>
+                <div className="text-xs text-gray-400 mb-4 space-y-1">
+                  <div>
+                    Zapisani:{' '}
+                    <span className="font-medium text-gray-600">
+                      {course.enrolledCount}/{course.capacity}
+                    </span>
+                  </div>
+                  {course.enrollmentDeadline && (
+                    <div>
+                      Zapisy do:{' '}
+                      <span className="font-medium text-gray-600">
+                        {new Date(course.enrollmentDeadline).toLocaleDateString('pl-PL')}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <Link
                   href={`/lecturer/courses/${course.id}/students`}

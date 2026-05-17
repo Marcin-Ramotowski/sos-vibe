@@ -8,9 +8,10 @@ interface EnrollButtonProps {
   courseId: string
   status: EnrollmentStatus
   onStatusChange: () => void
+  isDeadlinePassed?: boolean
 }
 
-export function EnrollButton({ courseId, status, onStatusChange }: EnrollButtonProps) {
+export function EnrollButton({ courseId, status, onStatusChange, isDeadlinePassed }: EnrollButtonProps) {
   const [loading, setLoading] = useState(false)
 
   const handleEnroll = async () => {
@@ -74,6 +75,14 @@ export function EnrollButton({ courseId, status, onStatusChange }: EnrollButtonP
     return (
       <span className="px-3 py-1.5 text-sm bg-gray-100 text-gray-400 rounded-lg border border-gray-200 font-medium">
         Brak miejsc
+      </span>
+    )
+  }
+
+  if (isDeadlinePassed) {
+    return (
+      <span className="px-3 py-1.5 text-sm bg-gray-100 text-gray-400 rounded-lg border border-gray-200 font-medium">
+        Zapisy zamknięte
       </span>
     )
   }

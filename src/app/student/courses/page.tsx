@@ -196,12 +196,29 @@ export default function StudentCoursesPage() {
                       </span>
                     </div>
                   )}
+                  {course.enrollmentDeadline && (
+                    <div>
+                      Zapisy do:{' '}
+                      <span className="font-medium text-gray-600">
+                        {new Date(course.enrollmentDeadline).toLocaleDateString('pl-PL')}
+                      </span>
+                    </div>
+                  )}
                 </div>
+                {course.enrollmentDeadline && new Date() > new Date(course.enrollmentDeadline) && (
+                  <span className="text-sm text-red-600 font-medium mb-2 block">
+                    ⚠ Zapisy zamknięte
+                  </span>
+                )}
                 {course.enrollmentStatus && (
                   <EnrollButton
                     courseId={course.id}
                     status={course.enrollmentStatus}
                     onStatusChange={fetchCourses}
+                    isDeadlinePassed={
+                      !!course.enrollmentDeadline &&
+                      new Date() > new Date(course.enrollmentDeadline)
+                    }
                   />
                 )}
               </div>

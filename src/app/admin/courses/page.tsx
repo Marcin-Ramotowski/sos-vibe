@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { CreateCourseDialog } from '@/presentation/components/courses/CreateCourseDialog'
 import { AssignLecturerDialog } from '@/presentation/components/courses/AssignLecturerDialog'
+import { EditCourseDialog } from '@/presentation/components/courses/EditCourseDialog'
 import type { CourseWithLecturer } from '@/domain/entities/course.entity'
 
 interface PaginatedCourses {
@@ -89,12 +90,19 @@ export default function AdminCoursesPage() {
                       <span className="text-gray-400">/{course.capacity}</span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <AssignLecturerDialog
-                        courseId={course.id}
-                        courseName={course.name}
-                        currentLecturerId={course.lecturerId}
-                        onAssigned={fetchCourses}
-                      />
+                      <div className="flex gap-2">
+                        <EditCourseDialog
+                          courseId={course.id}
+                          course={course}
+                          onUpdated={fetchCourses}
+                        />
+                        <AssignLecturerDialog
+                          courseId={course.id}
+                          courseName={course.name}
+                          currentLecturerId={course.lecturerId}
+                          onAssigned={fetchCourses}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

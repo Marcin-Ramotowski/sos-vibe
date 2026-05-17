@@ -5,31 +5,32 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import type { CourseWithLecturer } from '@/domain/entities/course.entity'
 
 const schema = z.object({
-  name: z.string().min(1, 'Nazwa jest wymagana'),
+  name: z.string().min(1, 'Nazwa jest wymagana').optional(),
   description: z.string().optional(),
-  capacity: z.coerce.number().int().min(1, 'Min. 1 miejsce'),
+  capacity: z.coerce.number().int().min(1, 'Min. 1 miejsce').optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   enrollmentDeadline: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.enrollmentDeadline && data.startDate) {
-      return new Date(data.enrollmentDeadline) <= new Date(data.startDate)
-    }
-    return true
-  },
-  { message: 'Termin zapisów musi być przed datą rozpoczęcia kursu', path: ['enrollmentDeadline'] },
-)
+})
 
 type FormData = z.infer<typeof schema>
 
-interface CreateCourseDialogProps {
-  onCreated: () => void
+function toDateInputValue(date: Date | string | null | undefined): string {
+  if (!date) return ''
+  const d = new Date(date)
+  return d.toISOString().slice(0, 10)
 }
 
-export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
+interface EditCourseDialogProps {
+  courseId: string
+  course: CourseWithLecturer
+  onUpdated: () => void
+}
+
+export function EditCourseDialog({ courseId, course, onUpdated }: EditCourseDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -38,30 +39,39 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) as unknown as import('react-hook-form').Resolver<FormData> })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema) as unknown as import('react-hook-form').Resolver<FormData>,
+    defaultValues: {
+      name: course.name,
+      description: course.description ?? '',
+      capacity: course.capacity,
+      startDate: toDateInputValue(course.startDate),
+      endDate: toDateInputValue(course.endDate),
+      enrollmentDeadline: toDateInputValue(course.enrollmentDeadline),
+    },
+  })
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     try {
-      const res = await fetch('/api/courses', {
-        method: 'POST',
+      const res = await fetch(`/api/courses/${courseId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          startDate: data.startDate || undefined,
-          endDate: data.endDate || undefined,
-          enrollmentDeadline: data.enrollmentDeadline || undefined,
+          startDate: data.startDate || null,
+          endDate: data.endDate || null,
+          enrollmentDeadline: data.enrollmentDeadline || null,
         }),
       })
       const body = await res.json()
       if (!res.ok) {
-        toast.error(body.message ?? 'Błąd tworzenia kursu')
+        toast.error(body.message ?? 'Błąd edycji kursu')
         return
       }
-      toast.success('Kurs został utworzony')
-      reset()
+      toast.success('Kurs został zaktualizowany')
       setOpen(false)
-      onCreated()
+      onUpdated()
     } catch {
       toast.error('Błąd połączenia')
     } finally {
@@ -73,9 +83,9 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium transition-colors"
+        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
       >
-        Utwórz Kurs
+        Edytuj
       </button>
     )
   }
@@ -83,14 +93,13 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div role="dialog" aria-modal="true" className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Nowy Kurs</h2>
+        <h2 className="text-xl font-bold mb-4">Edytuj Kurs</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nazwa kursu</label>
             <input
               {...register('name')}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="np. Algebra Liniowa"
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
           </div>
@@ -101,7 +110,6 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
               {...register('description')}
               rows={3}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Opis kursu..."
             />
           </div>
 
@@ -111,7 +119,6 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
               type="number"
               {...register('capacity')}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="30"
               min="1"
             />
             {errors.capacity && (
@@ -168,7 +175,7 @@ export function CreateCourseDialog({ onCreated }: CreateCourseDialogProps) {
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Tworzenie...' : 'Utwórz'}
+              {loading ? 'Zapisywanie...' : 'Zapisz zmiany'}
             </button>
           </div>
         </form>
