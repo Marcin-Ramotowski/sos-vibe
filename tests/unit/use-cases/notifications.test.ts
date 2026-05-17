@@ -31,6 +31,7 @@ const makeCourseRepo = (overrides: Partial<ICourseRepository> = {}): ICourseRepo
   findAllWithEnrollmentStatus: vi.fn(),
   findByLecturerId: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
   assignLecturer: vi.fn(),
   getStudentList: vi.fn(),
   ...overrides,
