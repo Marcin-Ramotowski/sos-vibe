@@ -10,5 +10,6 @@ export interface UpsertGradeData {
 export interface IGradeRepository {
   findByEnrollmentId(enrollmentId: string): Promise<Grade | null>
   findByStudentId(studentId: string, params: PaginationParams): Promise<PaginatedResult<GradeWithDetails>>
+  findByCourseId(courseId: string): Promise<number[]>
   upsertWithAudit(data: UpsertGradeData): Promise<Grade>
 }

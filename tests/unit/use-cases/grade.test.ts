@@ -8,6 +8,7 @@ import { NotFoundError, ForbiddenError, ValidationError } from '@/domain/errors'
 const makeGradeRepo = (overrides: Partial<IGradeRepository> = {}): IGradeRepository => ({
   findByEnrollmentId: vi.fn(),
   findByStudentId: vi.fn(),
+  findByCourseId: vi.fn(),
   upsertWithAudit: vi.fn(),
   ...overrides,
 })

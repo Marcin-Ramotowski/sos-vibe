@@ -54,6 +54,14 @@ export class PrismaGradeRepository implements IGradeRepository {
     }
   }
 
+  async findByCourseId(courseId: string): Promise<number[]> {
+    const grades = await prisma.grade.findMany({
+      where: { enrollment: { courseId } },
+      select: { value: true },
+    })
+    return grades.map((g) => Number(g.value))
+  }
+
   async upsertWithAudit(data: UpsertGradeData): Promise<Grade> {
     const { enrollmentId, value, gradedById } = data
 

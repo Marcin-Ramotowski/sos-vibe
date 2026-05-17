@@ -29,6 +29,7 @@ const makeEnrollmentRepo = (overrides: Partial<IEnrollmentRepository> = {}): IEn
 const makeGradeRepo = (overrides: Partial<IGradeRepository> = {}): IGradeRepository => ({
   findByEnrollmentId: vi.fn(),
   findByStudentId: vi.fn(),
+  findByCourseId: vi.fn(),
   upsertWithAudit: vi.fn(),
   ...overrides,
 })
