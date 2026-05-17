@@ -3,6 +3,7 @@ import { EnrollStudentUseCase } from '@/application/use-cases/enrollments/Enroll
 import { UnenrollStudentUseCase } from '@/application/use-cases/enrollments/UnenrollStudentUseCase'
 import type { IEnrollmentRepository } from '@/domain/repositories/IEnrollmentRepository'
 import type { ICourseRepository } from '@/domain/repositories/ICourseRepository'
+import type { INotificationRepository } from '@/domain/repositories/INotificationRepository'
 import { CourseFullError, AlreadyEnrolledError, GradeExistsError, NotFoundError } from '@/domain/errors'
 
 const makeEnrollmentRepo = (overrides: Partial<IEnrollmentRepository> = {}): IEnrollmentRepository => ({
@@ -23,6 +24,13 @@ const makeCourseRepo = (overrides: Partial<ICourseRepository> = {}): ICourseRepo
   create: vi.fn(),
   assignLecturer: vi.fn(),
   getStudentList: vi.fn(),
+  ...overrides,
+})
+
+const makeNotificationRepo = (overrides: Partial<INotificationRepository> = {}): INotificationRepository => ({
+  create: vi.fn().mockResolvedValue({}),
+  findUnreadByUserId: vi.fn(),
+  markAsRead: vi.fn(),
   ...overrides,
 })
 
@@ -51,7 +59,7 @@ describe('EnrollStudentUseCase', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       enrollAtomic: vi.fn().mockResolvedValue(mockEnrollment),
     })
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
 
     const result = await useCase.execute({ studentId: 'student-1', courseId: 'course-1' })
 
@@ -62,7 +70,7 @@ describe('EnrollStudentUseCase', () => {
   it('should throw NotFoundError when course does not exist', async () => {
     const courseRepo = makeCourseRepo({ findById: vi.fn().mockResolvedValue(null) })
     const enrollmentRepo = makeEnrollmentRepo()
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
 
     await expect(useCase.execute({ studentId: 'student-1', courseId: 'nonexistent' })).rejects.toThrow(
       NotFoundError,
@@ -74,7 +82,7 @@ describe('EnrollStudentUseCase', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       enrollAtomic: vi.fn().mockRejectedValue(new CourseFullError()),
     })
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
 
     await expect(useCase.execute({ studentId: 'student-1', courseId: 'course-1' })).rejects.toThrow(
       CourseFullError,
@@ -86,7 +94,7 @@ describe('EnrollStudentUseCase', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       enrollAtomic: vi.fn().mockRejectedValue(new AlreadyEnrolledError()),
     })
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
 
     await expect(useCase.execute({ studentId: 'student-1', courseId: 'course-1' })).rejects.toThrow(
       AlreadyEnrolledError,
