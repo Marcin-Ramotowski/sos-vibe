@@ -3,6 +3,7 @@ import { UpsertGradeUseCase } from '@/application/use-cases/grades/UpsertGradeUs
 import type { IGradeRepository } from '@/domain/repositories/IGradeRepository'
 import type { ICourseRepository } from '@/domain/repositories/ICourseRepository'
 import type { IEnrollmentRepository } from '@/domain/repositories/IEnrollmentRepository'
+import type { INotificationRepository } from '@/domain/repositories/INotificationRepository'
 import { NotFoundError, ForbiddenError, ValidationError } from '@/domain/errors'
 
 const makeGradeRepo = (overrides: Partial<IGradeRepository> = {}): IGradeRepository => ({
@@ -32,6 +33,13 @@ const makeEnrollmentRepo = (overrides: Partial<IEnrollmentRepository> = {}): IEn
   enrollAtomic: vi.fn(),
   unenroll: vi.fn(),
   hasGrade: vi.fn(),
+  ...overrides,
+})
+
+const makeNotificationRepo = (overrides: Partial<INotificationRepository> = {}): INotificationRepository => ({
+  create: vi.fn().mockResolvedValue({}),
+  findUnreadByUserId: vi.fn(),
+  markAsRead: vi.fn(),
   ...overrides,
 })
 
@@ -74,7 +82,7 @@ describe('UpsertGradeUseCase', () => {
       findByStudentAndCourse: vi.fn().mockResolvedValue(mockEnrollment),
     })
 
-    const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo)
+    const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo, makeNotificationRepo())
     const result = await useCase.execute({
       courseId: 'course-1',
       studentId: 'student-1',
@@ -91,7 +99,7 @@ describe('UpsertGradeUseCase', () => {
   })
 
   it('should throw ValidationError for invalid grade 2.5', async () => {
-    const useCase = new UpsertGradeUseCase(makeGradeRepo(), makeCourseRepo(), makeEnrollmentRepo())
+    const useCase = new UpsertGradeUseCase(makeGradeRepo(), makeCourseRepo(), makeEnrollmentRepo(), makeNotificationRepo())
     await expect(
       useCase.execute({
         courseId: 'course-1',
@@ -103,7 +111,7 @@ describe('UpsertGradeUseCase', () => {
   })
 
   it('should throw ValidationError for grade 1.0', async () => {
-    const useCase = new UpsertGradeUseCase(makeGradeRepo(), makeCourseRepo(), makeEnrollmentRepo())
+    const useCase = new UpsertGradeUseCase(makeGradeRepo(), makeCourseRepo(), makeEnrollmentRepo(), makeNotificationRepo())
     await expect(
       useCase.execute({
         courseId: 'course-1',
@@ -124,7 +132,7 @@ describe('UpsertGradeUseCase', () => {
       const enrollmentRepo = makeEnrollmentRepo({
         findByStudentAndCourse: vi.fn().mockResolvedValue(mockEnrollment),
       })
-      const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo)
+      const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo, makeNotificationRepo())
 
       const result = await useCase.execute({
         courseId: 'course-1',
@@ -139,7 +147,7 @@ describe('UpsertGradeUseCase', () => {
 
   it('should throw NotFoundError when course does not exist', async () => {
     const courseRepo = makeCourseRepo({ findById: vi.fn().mockResolvedValue(null) })
-    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, makeEnrollmentRepo())
+    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, makeEnrollmentRepo(), makeNotificationRepo())
 
     await expect(
       useCase.execute({
@@ -153,7 +161,7 @@ describe('UpsertGradeUseCase', () => {
 
   it('should throw ForbiddenError when lecturer is not the course lecturer', async () => {
     const courseRepo = makeCourseRepo({ findById: vi.fn().mockResolvedValue(mockCourse) })
-    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, makeEnrollmentRepo())
+    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, makeEnrollmentRepo(), makeNotificationRepo())
 
     await expect(
       useCase.execute({
@@ -170,7 +178,7 @@ describe('UpsertGradeUseCase', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       findByStudentAndCourse: vi.fn().mockResolvedValue(null),
     })
-    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, enrollmentRepo)
+    const useCase = new UpsertGradeUseCase(makeGradeRepo(), courseRepo, enrollmentRepo, makeNotificationRepo())
 
     await expect(
       useCase.execute({

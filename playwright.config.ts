@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: process.env['BASE_URL'] ?? 'http://localhost:3000',
+    baseURL: process.env['BASE_URL'] ?? `http://localhost:${process.env['APP_PORT'] ?? '3000'}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
