@@ -213,6 +213,77 @@ Order: `spec ready → TaskCreate (all steps) → TaskUpdate (dependencies) → 
 
 **When ALL implementation tasks have status `completed` — automatically run `/verify-standards`** without waiting for user command. This is a mandatory step in the `implement → verify` flow. Only after verify (and any fixes) inform the user about readiness to commit.
 
+## Feature Tracking
+
+Features live in `FEATURES.md` at the project root — one entry per user-facing capability. This file is the backlog and the single source of truth for what the product does and what is verified.
+
+### Feature Lifecycle
+
+```
+backlog → in-progress → implemented
+```
+
+- **backlog** — defined, not yet started
+- **in-progress** — implementation has begun
+- **implemented** — ALL Acceptance Criteria tests pass (confirmed via `verify.test`)
+
+**A feature MUST NOT be marked `implemented` until every AC test passes.** Running `verify.test` and seeing green for those tests is the only valid proof.
+
+### FEATURES.md Format
+
+Each feature entry follows this structure:
+
+```markdown
+## [FEAT-NNN] Title
+**Status:** backlog
+**Size:** S | M | L
+**Added:** YYYY-MM-DD
+
+### Description
+What this feature does from the user's perspective.
+
+### Scope
+**In scope:** …
+**Out of scope:** …
+
+### Motivation
+Why this feature is being built — business or technical driver.
+
+### Acceptance Criteria
+
+| ID | Criterion | Test |
+|----|-----------|------|
+| AC-NNN-1 | User can … | `tests/e2e/foo.spec.ts > "[AC-NNN-1] …"` |
+| AC-NNN-2 | System rejects … when … | `tests/unit/bar.test.ts > "[AC-NNN-2] …"` |
+```
+
+- **FEAT-NNN** — three-digit sequential ID (001, 002, …)
+- **Size** — S (< 3 steps, no arch decisions) · M (multiple layers, planned) · L (new module, full spec required)
+- **AC-NNN-M** — AC item ID: feature number + item index (e.g. AC-001-1, AC-001-2)
+- **Test column** — exact file path + test title; the title MUST start with `[AC-NNN-M]`
+
+### AC → Test Mapping Convention
+
+Each AC item maps to exactly one test. The `it()` / `test()` block title MUST begin with the AC ID:
+
+```ts
+it("[AC-001-1] student can enroll in a course with available seats", async () => { … })
+```
+
+This makes the mapping grep-able. To verify a specific AC item:
+
+```bash
+grep -r "AC-001-1" tests/
+```
+
+### Agent Rules
+
+1. **When a new feature is requested** — add an entry to `FEATURES.md` with status `backlog` BEFORE writing any code.
+2. **When implementation starts** — change status to `in-progress`.
+3. **Write AC tests first** — before implementing logic, write failing tests whose titles start with AC IDs.
+4. **Mark `implemented` only after** running `verify.test` and confirming all AC tests for that feature are green.
+5. **Never mark implemented speculatively** — "the logic is there" is not sufficient; the test must pass.
+
 ## Core Principles
 
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
@@ -290,6 +361,27 @@ Domain has no knowledge of Prisma. Application has no knowledge of Next.js. Rout
 | Test | `npm test` (all) · `npm run test:unit` · `npm run test:integration` · `npm run test:e2e` |
 | Lint / Format | `npm run lint` · `npx prettier --write .` · `npx tsc --noEmit` (typecheck) |
 | DB | `npx prisma migrate dev` (migrations) · `npx prisma db seed` (seed) · `npx prisma studio` (GUI) |
+
+## Verify Gate Commands
+
+The verify gate is a mandatory checkpoint before any commit. Run all four commands in order — every one must pass before the work is considered done.
+
+| Field | Command | Passes when |
+|-------|---------|-------------|
+| `verify.build` | `npm run build` | Exit code 0, zero TypeScript / Next.js compilation errors |
+| `verify.lint` | `npm run lint && npx tsc --noEmit` | Zero ESLint errors, zero type errors |
+| `verify.test` | `npm test` | All unit and integration tests green |
+| `verify.diff` | `git diff main...HEAD --stat` | Agent review: only expected files changed, no debug artifacts |
+
+### Rules for agents
+
+- Run all four fields **in order**: build → lint → test → diff.
+- If any command fails — **stop, fix, re-run the entire gate from the top**. Do not skip ahead.
+- `verify.diff` is a **review step**, not a pass/fail command. After running it the agent must:
+  1. Confirm that only expected files are modified.
+  2. Confirm no debug artifacts (`console.log`, `TODO`, hardcoded values) remain.
+  3. Report the diff summary to the user before proposing a commit.
+- This gate supersedes the standalone "Build Verification" step described in the Workflow section.
 
 ## Coding Standards
 
