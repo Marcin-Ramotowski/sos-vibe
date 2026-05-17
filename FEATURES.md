@@ -41,7 +41,7 @@ Model `GradeAuditLog` istnieje w schemacie Prisma, ale nie ma żadnego UI ani AP
 ---
 
 ## [FEAT-002] Statystyki kursu dla wykładowcy
-**Status:** in-progress  
+**Status:** implemented  
 **Size:** M  
 **Added:** 2026-05-17
 
