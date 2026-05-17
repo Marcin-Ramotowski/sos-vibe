@@ -49,3 +49,9 @@ export class ValidationError extends DomainError {
     super('VALIDATION_ERROR', message)
   }
 }
+
+export class EnrollmentClosedError extends DomainError {
+  constructor() {
+    super('ENROLLMENT_CLOSED', 'Zapisy na ten kurs zostały zamknięte')
+  }
+}

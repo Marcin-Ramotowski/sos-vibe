@@ -5,6 +5,18 @@ export interface CreateCourseData {
   name: string
   description?: string
   capacity: number
+  startDate?: Date
+  endDate?: Date
+  enrollmentDeadline?: Date
+}
+
+export interface UpdateCourseData {
+  name?: string
+  description?: string | null
+  capacity?: number
+  startDate?: Date | null
+  endDate?: Date | null
+  enrollmentDeadline?: Date | null
 }
 
 export interface CourseFilterParams {
@@ -23,6 +35,7 @@ export interface ICourseRepository {
   ): Promise<PaginatedResult<CourseWithStatus>>
   findByLecturerId(lecturerId: string, params: PaginationParams): Promise<PaginatedResult<CourseWithLecturer>>
   create(data: CreateCourseData): Promise<Course>
+  update(courseId: string, data: UpdateCourseData): Promise<CourseWithLecturer>
   assignLecturer(courseId: string, lecturerId: string): Promise<CourseWithLecturer>
   getStudentList(courseId: string, params: PaginationParams): Promise<PaginatedResult<{
     id: string

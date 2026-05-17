@@ -5,6 +5,9 @@ export interface Course {
   capacity: number
   enrolledCount: number
   lecturerId: string | null
+  startDate: Date | null
+  endDate: Date | null
+  enrollmentDeadline: Date | null
   createdAt: Date
   updatedAt: Date
 }

@@ -31,14 +31,17 @@ model User {
 }
 
 model Course {
-  id            String   @id @default(uuid())
-  name          String
-  description   String?
-  capacity      Int
-  enrolledCount Int      @default(0)
-  lecturerId    String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  name               String
+  description        String?
+  capacity           Int
+  enrolledCount      Int       @default(0)
+  lecturerId         String?
+  startDate          DateTime? @map("start_date")
+  endDate            DateTime? @map("end_date")
+  enrollmentDeadline DateTime? @map("enrollment_deadline")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   lecturer    User?        @relation("LecturerCourses", fields: [lecturerId], references: [id], onDelete: SetNull)
   enrollments Enrollment[]

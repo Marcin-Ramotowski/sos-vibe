@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import type {
   ICourseRepository,
   CreateCourseData,
+  UpdateCourseData,
   CourseFilterParams,
 } from '@/domain/repositories/ICourseRepository'
 import type { Course, CourseWithLecturer, CourseWithStatus } from '@/domain/entities/course.entity'
@@ -22,6 +23,9 @@ type PrismaCourseWithLecturer = {
   capacity: number
   enrolledCount: number
   lecturerId: string | null
+  startDate: Date | null
+  endDate: Date | null
+  enrollmentDeadline: Date | null
   createdAt: Date
   updatedAt: Date
   lecturer: PrismaUser | null
@@ -35,6 +39,9 @@ function mapCourse(c: PrismaCourseWithLecturer): CourseWithLecturer {
     capacity: c.capacity,
     enrolledCount: c.enrolledCount,
     lecturerId: c.lecturerId,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    enrollmentDeadline: c.enrollmentDeadline,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
     lecturer: c.lecturer
@@ -159,6 +166,9 @@ export class PrismaCourseRepository implements ICourseRepository {
       capacity: number
       enrolledCount: number
       lecturerId: string | null
+      startDate: Date | null
+      endDate: Date | null
+      enrollmentDeadline: Date | null
       createdAt: Date
       updatedAt: Date
       lecId: string | null
@@ -177,6 +187,9 @@ export class PrismaCourseRepository implements ICourseRepository {
           c.capacity,
           c."enrolledCount",
           c."lecturerId",
+          c."start_date"        AS "startDate",
+          c."end_date"          AS "endDate",
+          c."enrollment_deadline" AS "enrollmentDeadline",
           c."createdAt",
           c."updatedAt",
           u.id                  AS "lecId",
@@ -213,6 +226,9 @@ export class PrismaCourseRepository implements ICourseRepository {
         capacity: row.capacity,
         enrolledCount: row.enrolledCount,
         lecturerId: row.lecturerId,
+        startDate: row.startDate,
+        endDate: row.endDate,
+        enrollmentDeadline: row.enrollmentDeadline,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         lecturer: row.lecId
@@ -262,9 +278,21 @@ export class PrismaCourseRepository implements ICourseRepository {
       capacity: course.capacity,
       enrolledCount: course.enrolledCount,
       lecturerId: course.lecturerId,
+      startDate: course.startDate,
+      endDate: course.endDate,
+      enrollmentDeadline: course.enrollmentDeadline,
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,
     }
+  }
+
+  async update(courseId: string, data: UpdateCourseData): Promise<CourseWithLecturer> {
+    const course = await prisma.course.update({
+      where: { id: courseId },
+      data,
+      include: lecturerInclude,
+    })
+    return mapCourse(course)
   }
 
   async assignLecturer(courseId: string, lecturerId: string): Promise<CourseWithLecturer> {

@@ -8,6 +8,7 @@ import {
   AlreadyEnrolledError,
   GradeExistsError,
   ValidationError,
+  EnrollmentClosedError,
 } from '@/domain/errors'
 
 export function handleApiError(error: unknown): NextResponse {
@@ -27,6 +28,9 @@ export function handleApiError(error: unknown): NextResponse {
     return NextResponse.json({ code: error.code, message: error.message }, { status: 409 })
   }
   if (error instanceof GradeExistsError) {
+    return NextResponse.json({ code: error.code, message: error.message }, { status: 409 })
+  }
+  if (error instanceof EnrollmentClosedError) {
     return NextResponse.json({ code: error.code, message: error.message }, { status: 409 })
   }
   if (error instanceof ValidationError) {
