@@ -67,6 +67,18 @@ jobs:
       - name: Run migrations
         run: npx prisma migrate deploy
 
+      - name: Seed database
+        run: npx prisma db seed
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Start server
+        run: npm run start &
+
+      - name: Wait for server
+        run: timeout 60 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
+
       - name: Unit tests
         run: npm run test:unit
 
