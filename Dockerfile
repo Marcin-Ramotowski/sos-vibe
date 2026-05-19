@@ -52,10 +52,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prisma CLI + migration engine for runtime migrations
+# Prisma CLI + all @prisma/* sub-packages for runtime migrations
 COPY --from=deps /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
-COPY --from=deps /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
