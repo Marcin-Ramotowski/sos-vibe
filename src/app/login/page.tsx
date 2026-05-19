@@ -113,12 +113,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-xs text-gray-400 text-center space-y-1">
-            <p className="font-medium text-gray-500 mb-1">Konta testowe</p>
-            <p>Admin: admin@uni.pl / admin123</p>
-            <p>Prowadzący: lecturer@uni.pl / lecturer123</p>
-            <p>Student: student@uni.pl / student123</p>
-          </div>
+          {process.env.NODE_ENV !== 'production' && (
+            <div className="mt-6 text-xs text-gray-400 text-center space-y-1">
+              <p className="font-medium text-gray-500 mb-1">Konta testowe</p>
+              <p>Admin: admin@uni.pl / admin123</p>
+              <p>Prowadzący: lecturer@uni.pl / lecturer123</p>
+              <p>Student: student@uni.pl / student123</p>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
