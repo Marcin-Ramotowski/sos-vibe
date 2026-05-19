@@ -1,7 +1,6 @@
 services:
   app:
-    build:
-      target: runner
+    image: pikram/sos-app:latest
     environment:
       NODE_ENV: production
     restart: always
@@ -16,6 +15,9 @@ services:
       timeout: 5s
       start_period: 15s
       retries: 3
+    networks:
+      - public
+      - private
 
   db:
     restart: always
@@ -24,3 +26,28 @@ services:
         limits:
           cpus: '0.5'
           memory: 256M
+    networks:
+      - private
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.5.0
+    command:
+      [
+        "tunnel",
+        "--no-autoupdate",
+        "run",
+        "--token",
+        "${CLOUDFLARED_TOKEN}"
+      ]
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - public
+
+networks:
+  public:
+    driver: bridge
+  private:
+    driver: bridge
+    internal: true

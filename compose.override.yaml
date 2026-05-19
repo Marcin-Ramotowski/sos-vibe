@@ -8,6 +8,8 @@ services:
       - /app/.next
     environment:
       NODE_ENV: development
+    ports:
+      - "${APP_PORT:-3000}:3000"
 
   db:
     ports:
