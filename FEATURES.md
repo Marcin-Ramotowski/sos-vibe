@@ -313,9 +313,10 @@ Brak terminów oznacza, że student może zapisać się na kurs dowolnie późno
 ---
 
 ## [FEAT-011] System powiadomień in-app
-**Status:** implemented
+**Status:** removed
 **Size:** L
 **Added:** 2026-05-17
+**Removed:** 2026-05-20
 
 ### Description
 Użytkownicy otrzymują powiadomienia w aplikacji: student — gdy zostanie oceniony; wykładowca — gdy ktoś zapisze się na jego kurs; admin — możliwość podglądu wszystkich powiadomień.

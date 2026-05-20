@@ -3,7 +3,6 @@ import type { UserRole } from '@/domain/entities/user.entity'
 import { PrismaGradeRepository } from '@/infrastructure/repositories/PrismaGradeRepository'
 import { PrismaCourseRepository } from '@/infrastructure/repositories/PrismaCourseRepository'
 import { PrismaEnrollmentRepository } from '@/infrastructure/repositories/PrismaEnrollmentRepository'
-import { PrismaNotificationRepository } from '@/infrastructure/repositories/PrismaNotificationRepository'
 import { UpsertGradeUseCase } from '@/application/use-cases/grades/UpsertGradeUseCase'
 import { upsertGradeSchema } from '@/presentation/api/schemas/grade.schema'
 import { handleApiError } from '@/presentation/api/error-handler'
@@ -31,8 +30,7 @@ export async function PUT(
     const gradeRepo = new PrismaGradeRepository()
     const courseRepo = new PrismaCourseRepository()
     const enrollmentRepo = new PrismaEnrollmentRepository()
-    const notificationRepo = new PrismaNotificationRepository()
-    const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo, notificationRepo)
+    const useCase = new UpsertGradeUseCase(gradeRepo, courseRepo, enrollmentRepo)
 
     const grade = await useCase.execute({
       courseId,

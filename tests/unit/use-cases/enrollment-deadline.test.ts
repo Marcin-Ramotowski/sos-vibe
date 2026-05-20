@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { EnrollStudentUseCase } from '@/application/use-cases/enrollments/EnrollStudentUseCase'
 import type { IEnrollmentRepository } from '@/domain/repositories/IEnrollmentRepository'
 import type { ICourseRepository } from '@/domain/repositories/ICourseRepository'
-import type { INotificationRepository } from '@/domain/repositories/INotificationRepository'
 import { EnrollmentClosedError } from '@/domain/errors'
 
 const makeEnrollmentRepo = (overrides: Partial<IEnrollmentRepository> = {}): IEnrollmentRepository => ({
@@ -12,13 +11,6 @@ const makeEnrollmentRepo = (overrides: Partial<IEnrollmentRepository> = {}): IEn
   enrollAtomic: vi.fn(),
   unenroll: vi.fn(),
   hasGrade: vi.fn(),
-  ...overrides,
-})
-
-const makeNotificationRepo = (overrides: Partial<INotificationRepository> = {}): INotificationRepository => ({
-  create: vi.fn(),
-  findUnreadByUserId: vi.fn(),
-  markAsRead: vi.fn(),
   ...overrides,
 })
 
@@ -68,7 +60,7 @@ describe('EnrollStudentUseCase — enrollment deadline guard', () => {
     const course = { ...baseCourse, enrollmentDeadline: new Date('2026-05-31') }
     const courseRepo = makeCourseRepo({ findById: vi.fn().mockResolvedValue(course) })
     const enrollmentRepo = makeEnrollmentRepo()
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
 
     await expect(
       useCase.execute({ studentId: 'student-1', courseId: 'course-1' }),
@@ -83,7 +75,7 @@ describe('EnrollStudentUseCase — enrollment deadline guard', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       enrollAtomic: vi.fn().mockResolvedValue(mockEnrollment),
     })
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
 
     const result = await useCase.execute({ studentId: 'student-1', courseId: 'course-1' })
 
@@ -100,7 +92,7 @@ describe('EnrollStudentUseCase — enrollment deadline guard', () => {
     const enrollmentRepo = makeEnrollmentRepo({
       enrollAtomic: vi.fn().mockResolvedValue(mockEnrollment),
     })
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, makeNotificationRepo())
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
 
     const result = await useCase.execute({ studentId: 'student-1', courseId: 'course-1' })
 

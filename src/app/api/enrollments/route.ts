@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { UserRole } from '@/domain/entities/user.entity'
 import { PrismaEnrollmentRepository } from '@/infrastructure/repositories/PrismaEnrollmentRepository'
 import { PrismaCourseRepository } from '@/infrastructure/repositories/PrismaCourseRepository'
-import { PrismaNotificationRepository } from '@/infrastructure/repositories/PrismaNotificationRepository'
 import { EnrollStudentUseCase } from '@/application/use-cases/enrollments/EnrollStudentUseCase'
 import { GetMyEnrollmentsUseCase } from '@/application/use-cases/enrollments/GetMyEnrollmentsUseCase'
 import { enrollSchema } from '@/presentation/api/schemas/enrollment.schema'
@@ -44,8 +43,7 @@ export async function POST(request: NextRequest) {
 
     const enrollmentRepo = new PrismaEnrollmentRepository()
     const courseRepo = new PrismaCourseRepository()
-    const notificationRepo = new PrismaNotificationRepository()
-    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo, notificationRepo)
+    const useCase = new EnrollStudentUseCase(enrollmentRepo, courseRepo)
     const enrollment = await useCase.execute({ studentId: userId, courseId: parsed.data.courseId })
 
     return NextResponse.json(enrollment, { status: 201 })
