@@ -10,7 +10,18 @@ COPY prisma.config.ts ./
 RUN npm ci
 
 # ============================================
-# Stage 2: Builder
+# Stage 2: Production dependencies (no devDeps)
+# ============================================
+FROM node:22-alpine AS prod-deps
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+RUN npm ci --omit=dev --ignore-scripts && ./node_modules/.bin/prisma generate
+
+# ============================================
+# Stage 3: Builder
 # ============================================
 FROM node:22-alpine AS builder
 WORKDIR /app
@@ -21,7 +32,7 @@ COPY . .
 RUN npm run build
 
 # ============================================
-# Stage 3: Development
+# Stage 4: Development
 # ============================================
 FROM node:22-alpine AS development
 WORKDIR /app
@@ -38,7 +49,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 # ============================================
-# Stage 4: Runner (production draft — finalized in Phase 5)
+# Stage 5: Runner (production draft — finalized in Phase 5)
 # ============================================
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -52,6 +63,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Full production node_modules replaces the standalone's minimal subset —
+# Prisma CLI, all @prisma/* packages and WASM files are included without
+# having to enumerate individual files across Prisma releases.
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 USER appuser
 
 EXPOSE 3000
@@ -59,4 +80,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["./entrypoint.sh"]
