@@ -1,0 +1,59 @@
+---
+# Gemini Code Assist on GitHub - per-repo review configuration.
+# This file lives at <repo-root>/.gemini/config.yaml.
+# Full key reference: https://developers.google.com/gemini-code-assist/docs/customize-repo-review
+
+code_review:
+  # Global switch. false = review is enabled for this repo.
+  disable: false
+
+  # Severity threshold. Comments below this level are filtered out before they reach the PR.
+  # Allowed values: LOW, MEDIUM, HIGH, CRITICAL.
+  #
+  # Start with HIGH for the first 1-2 weeks and
+  # observe whether the team actually reacts to the comments:
+  #   - everything ignored as noise           -> raise to CRITICAL
+  #   - acting on individual ones, want more  -> lower to MEDIUM
+  comment_severity_threshold: MEDIUM
+
+  # Maximum number of comments per single PR. -1 = no limit (risky, agent likes
+  # to leave a dozen style nits). 5-10 is a sensible ceiling for most teams.
+  max_review_comments: 10
+
+  # What the agent does when a PR is opened.
+  pull_request_opened:
+    summary: true           # short change summary at the top of the PR conversation
+    help: false             # no first comment with the @gemini command list (team knows them)
+    code_review: true       # main review pass on the diff
+    include_drafts: false   # draft PRs are work in progress, review runs on Ready for Review
+
+# Path patterns excluded from review (gitignore-style).
+# Stack: Next.js 15, TypeScript, Prisma 6, PostgreSQL, Vitest, Playwright.
+# Generated and build artefacts have no review value — manual edits are
+# overwritten on the next regeneration or test run.
+ignore_patterns:
+  # dependency manifests
+  - "**/*.lock"
+  # build / compiler output
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.next/**"
+  - "**/out/**"
+  - "**/*.tsbuildinfo"
+  - "**/next-env.d.ts"
+  # test artefacts
+  - "**/coverage/**"
+  - "**/playwright-report/**"
+  - "**/test-results/**"
+  - "**/*.snap"
+  # generated code
+  - "**/src/generated/**"
+  - "**/*.generated.ts"
+  - "**/*.generated.d.ts"
+  - "**/prisma/migrations/**"
+  # runtime / tooling
+  - "**/node_modules/**"
+  - "**/.claude/**"
+
+# Google easter egg. No effect on review; leave false.
+have_fun: false
