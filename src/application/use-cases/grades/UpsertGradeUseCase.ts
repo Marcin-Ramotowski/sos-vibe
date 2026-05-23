@@ -1,7 +1,6 @@
 import type { IGradeRepository } from '@/domain/repositories/IGradeRepository'
 import type { ICourseRepository } from '@/domain/repositories/ICourseRepository'
 import type { IEnrollmentRepository } from '@/domain/repositories/IEnrollmentRepository'
-import type { INotificationRepository } from '@/domain/repositories/INotificationRepository'
 import type { Grade } from '@/domain/entities/grade.entity'
 import { isValidGrade } from '@/domain/entities/grade.entity'
 import { NotFoundError, ForbiddenError, ValidationError } from '@/domain/errors'
@@ -18,7 +17,6 @@ export class UpsertGradeUseCase {
     private readonly gradeRepo: IGradeRepository,
     private readonly courseRepo: ICourseRepository,
     private readonly enrollmentRepo: IEnrollmentRepository,
-    private readonly notificationRepo: INotificationRepository,
   ) {}
 
   async execute(input: UpsertGradeInput): Promise<Grade> {
@@ -41,18 +39,10 @@ export class UpsertGradeUseCase {
     )
     if (!enrollment) throw new NotFoundError('Zapis studenta na kurs')
 
-    const grade = await this.gradeRepo.upsertWithAudit({
+    return this.gradeRepo.upsertWithAudit({
       enrollmentId: enrollment.id,
       value: input.value,
       gradedById: input.lecturerId,
     })
-    try {
-      await this.notificationRepo.create({
-        userId: input.studentId,
-        type: 'GRADE_ASSIGNED',
-        payload: { courseId: input.courseId, gradeValue: input.value },
-      })
-    } catch { /* silently ignored — notification is non-critical */ }
-    return grade
   }
 }
