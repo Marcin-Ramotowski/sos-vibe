@@ -15,6 +15,7 @@
 # Re-evaluate when Next.js ships a patch that bundles postcss >= 8.5.10.
 # GHSA: https://github.com/advisories/GHSA-qx2v-qp2m-jg93
 GHSA-qx2v-qp2m-jg93 exp:2026-11-25
+CVE-2026-41305 exp:2026-11-25
 
 # @hono/node-server < 1.19.13 — middleware bypass via repeated slashes in
 # serveStatic. This is a devDependency of @prisma/dev (internal Prisma
@@ -23,3 +24,4 @@ GHSA-qx2v-qp2m-jg93 exp:2026-11-25
 # @hono/node-server version.
 # GHSA: https://github.com/advisories/GHSA-92pp-h63x-v22m
 GHSA-92pp-h63x-v22m exp:2026-11-25
+CVE-2026-39406 exp:2026-11-25
