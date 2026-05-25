@@ -25,3 +25,11 @@ CVE-2026-41305 exp:2026-11-25
 # GHSA: https://github.com/advisories/GHSA-92pp-h63x-v22m
 GHSA-92pp-h63x-v22m exp:2026-11-25
 CVE-2026-39406 exp:2026-11-25
+
+# picomatch 4.0.3 — ReDoS via crafted extglob patterns (CVE-2026-33671).
+# This package is bundled INSIDE npm's own node_modules in node:22-alpine —
+# it is NOT part of our application code. npm is not invoked at runtime in
+# the production runner, so the attack surface is zero. Fix is picomatch
+# >= 4.0.4, which will arrive via a future node:22-alpine base-image update.
+# Re-evaluate when node:22 ships with npm >= version that bundles picomatch 4.0.4+.
+CVE-2026-33671 exp:2026-11-25
