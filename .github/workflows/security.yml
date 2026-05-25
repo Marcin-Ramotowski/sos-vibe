@@ -30,9 +30,10 @@ jobs:
     name: "SCA — Dependency Vulnerabilities"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      # GitHub-native diff-aware SCA: only evaluates packages added/upgraded in this PR
+      # Diff-aware SCA: only evaluates packages added/upgraded in this PR.
+      # Requires public repo or GitHub Advanced Security (GHAS).
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         with:
@@ -48,8 +49,9 @@ jobs:
       - name: npm audit
         run: npm audit --audit-level=high
 
-      # Deep scan — catches CVEs missed by npm audit (e.g. via lockfile resolution quirks)
+      # Runs even when npm audit exits non-zero so SARIF is always generated
       - name: Trivy — npm filesystem scan
+        if: always()
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
@@ -63,7 +65,7 @@ jobs:
           output: trivy-sca.sarif
 
       - name: Upload Trivy SCA SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true   # SARIF upload requires GHAS on private repos
         with:
@@ -84,17 +86,17 @@ jobs:
       security-events: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # CodeQL — deep semantic analysis; results go to Security tab when GHAS is enabled
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           queries: security-and-quality
 
       - name: CodeQL Analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         continue-on-error: true   # analysis runs regardless; upload fails on private repos without GHAS
         with:
           category: codeql-sast
@@ -111,7 +113,7 @@ jobs:
           generateSarif: '1'
 
       - name: Upload Semgrep SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
@@ -128,7 +130,7 @@ jobs:
     name: "Container — Image Vulnerability Scan"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: docker/setup-buildx-action@v3
 
@@ -154,7 +156,7 @@ jobs:
           exit-code: '1'
 
       - name: Upload Trivy Container SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
@@ -171,7 +173,7 @@ jobs:
     name: "Secrets — Leak Detection"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0   # full history so Gitleaks can scan all commits on the branch
 
@@ -200,7 +202,7 @@ jobs:
     name: "IaC — Infrastructure & Configuration Security"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Checkov — policy-as-code checks for Dockerfile, Compose, and workflow files
       - name: Checkov — Dockerfile / Compose / GitHub Actions
@@ -213,15 +215,16 @@ jobs:
           soft_fail: false
 
       - name: Upload Checkov SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
           sarif_file: checkov.sarif
           category: checkov-iac
 
-      # Trivy config mode — cross-checks Checkov; covers YAML/JSON config files
+      # Runs even when Checkov exits non-zero so SARIF is always generated
       - name: Trivy — config / IaC scan
+        if: always()
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
@@ -232,7 +235,7 @@ jobs:
           exit-code: '1'
 
       - name: Upload Trivy Config SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
@@ -253,7 +256,7 @@ jobs:
       security-events: write
       id-token: write   # SLSA provenance / Cosign attestation
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
@@ -291,7 +294,7 @@ jobs:
           output-format: sarif
 
       - name: Upload Grype SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
@@ -319,7 +322,7 @@ jobs:
     name: "AI-Native — Sensitive Data Flows & AI Security"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Bearer uses a data-flow engine to track how sensitive data (tokens, PII,
       # credentials) moves through the app — catches leaks standard SAST misses.
@@ -333,7 +336,7 @@ jobs:
           exit-code: 1
 
       - name: Upload Bearer SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
@@ -349,7 +352,7 @@ jobs:
           generateSarif: '1'
 
       - name: Upload Semgrep Trail-of-Bits SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         continue-on-error: true
         with:
