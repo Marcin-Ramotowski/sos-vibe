@@ -35,11 +35,11 @@ jobs:
       # Diff-aware SCA: only evaluates packages added/upgraded in this PR.
       # Requires public repo or GitHub Advanced Security (GHAS).
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -60,6 +60,7 @@ jobs:
           vuln-type: library
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: '1'
           format: sarif
           output: trivy-sca.sarif
@@ -153,6 +154,7 @@ jobs:
           output: trivy-container.sarif
           severity: CRITICAL,HIGH
           ignore-unfixed: true   # skip CVEs with no available fix (reduces base-image noise)
+          trivyignores: .trivyignore
           exit-code: '1'
 
       - name: Upload Trivy Container SARIF
@@ -232,6 +234,7 @@ jobs:
           format: sarif
           output: trivy-config.sarif
           severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
           exit-code: '1'
 
       - name: Upload Trivy Config SARIF
@@ -258,7 +261,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
