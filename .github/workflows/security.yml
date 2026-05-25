@@ -152,6 +152,7 @@ jobs:
           image-ref: sos-app:scan
           format: sarif
           output: trivy-container.sarif
+          scanners: vuln
           severity: CRITICAL,HIGH
           ignore-unfixed: true   # skip CVEs with no available fix (reduces base-image noise)
           trivyignores: .trivyignore
