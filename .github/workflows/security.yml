@@ -1,0 +1,407 @@
+name: Security Scan
+
+# Runs on every PR targeting master.
+# All 7 jobs run in parallel; the Security Gate aggregates results
+# and is the single required check to add to branch protection rules.
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  security-events: write   # SARIF uploads (requires GHAS on private repos)
+  pull-requests: read
+  actions: read
+  id-token: write          # Sigstore / SLSA attestation
+
+concurrency:
+  group: security-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ══════════════════════════════════════════════════════════════════
+  # 1. SCA — Software Composition Analysis
+  # Tools : GitHub Dependency Review · npm audit · Trivy (fs/library)
+  # Blocks: HIGH / CRITICAL CVEs in npm dependencies (direct + transitive)
+  # ══════════════════════════════════════════════════════════════════
+  sca:
+    name: "SCA — Dependency Vulnerabilities"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GitHub-native diff-aware SCA: only evaluates packages added/upgraded in this PR
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+      # Deep scan — catches CVEs missed by npm audit (e.g. via lockfile resolution quirks)
+      - name: Trivy — npm filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          vuln-type: library
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          format: sarif
+          output: trivy-sca.sarif
+
+      - name: Upload Trivy SCA SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true   # SARIF upload requires GHAS on private repos
+        with:
+          sarif_file: trivy-sca.sarif
+          category: trivy-sca
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 2. SAST — Static Application Security Testing
+  # Tools : CodeQL (JS/TS) · Semgrep (TypeScript / Next.js / OWASP / JWT)
+  # Blocks: HIGH / CRITICAL code-level security vulnerabilities
+  # ══════════════════════════════════════════════════════════════════
+  sast:
+    name: "SAST — Static Code Analysis"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # CodeQL — deep semantic analysis; results go to Security tab when GHAS is enabled
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+
+      - name: CodeQL Analyze
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true   # analysis runs regardless; upload fails on private repos without GHAS
+        with:
+          category: codeql-sast
+
+      # Semgrep — fast, rule-based; explicit exit code 1 on findings blocks the PR
+      - name: Semgrep — TypeScript / Next.js / OWASP / JWT
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/typescript
+            p/nextjs
+            p/owasp-top-ten
+            p/jwt
+          generateSarif: '1'
+
+      - name: Upload Semgrep SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep-sast
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 3. Container — Docker Image Vulnerability Scan
+  # Tools : Trivy image scan
+  # Blocks: HIGH / CRITICAL CVEs in base image or added layers
+  # ══════════════════════════════════════════════════════════════════
+  container-scan:
+    name: "Container — Image Vulnerability Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Build the production target locally (no push) so Trivy can scan it
+      - name: Build production image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          load: true
+          tags: sos-app:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy — container image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: sos-app:scan
+          format: sarif
+          output: trivy-container.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true   # skip CVEs with no available fix (reduces base-image noise)
+          exit-code: '1'
+
+      - name: Upload Trivy Container SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: trivy-container.sarif
+          category: trivy-container
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 4. Secrets — Leaked Credentials & API Key Detection
+  # Tools : Gitleaks (full history) · TruffleHog (verified secrets)
+  # Blocks: any secret pattern in current commits or full branch history
+  # ══════════════════════════════════════════════════════════════════
+  secrets:
+    name: "Secrets — Leak Detection"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so Gitleaks can scan all commits on the branch
+
+      # Gitleaks — pattern-based scan of every commit reachable from HEAD
+      - name: Gitleaks — full-history secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # TruffleHog — only reports secrets it can actively verify (reduces false positives)
+      - name: TruffleHog — verified secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 5. IaC — Infrastructure & Configuration Security
+  # Tools : Checkov (Dockerfile / Compose / GitHub Actions) · Trivy config
+  # Blocks: HIGH / CRITICAL misconfigurations in infra/config files
+  # ══════════════════════════════════════════════════════════════════
+  iac:
+    name: "IaC — Infrastructure & Configuration Security"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Checkov — policy-as-code checks for Dockerfile, Compose, and workflow files
+      - name: Checkov — Dockerfile / Compose / GitHub Actions
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,github_actions
+          output_format: sarif
+          output_file_path: checkov.sarif
+          soft_fail: false
+
+      - name: Upload Checkov SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: checkov.sarif
+          category: checkov-iac
+
+      # Trivy config mode — cross-checks Checkov; covers YAML/JSON config files
+      - name: Trivy — config / IaC scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Upload Trivy Config SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-iac
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 6. Supply Chain — SBOM Generation & Dependency Integrity
+  # Tools : Syft (SBOM) · Grype (SBOM CVE scan) · lockfile drift check
+  # Blocks: HIGH / CRITICAL CVEs · lockfile out-of-sync with package.json
+  # ══════════════════════════════════════════════════════════════════
+  supply-chain:
+    name: "Supply Chain — SBOM & Integrity"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write   # SLSA provenance / Cosign attestation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      # Detect lockfile drift — catches manual `npm install` without committing lock
+      - name: Verify package-lock.json is up-to-date
+        run: |
+          npm install --package-lock-only
+          git diff --exit-code package-lock.json || {
+            echo "::error::package-lock.json is out of sync with package.json. Run 'npm install' and commit the updated lockfile."
+            exit 1
+          }
+
+      # Syft — produces a CycloneDX SBOM listing every component in the repo
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          upload-artifact: false
+
+      # Grype — scans the full dependency tree for known CVEs
+      - name: Grype — scan for CVEs
+        uses: anchore/scan-action@v6
+        id: grype
+        with:
+          path: .
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+
+      - name: Upload Grype SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+          category: grype-supply-chain
+
+      # Keep a dated SBOM artifact per commit for audit / compliance purposes
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.cyclonedx.json
+          retention-days: 90
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # 7. AI-Native Security
+  # Tools : Bearer (AI-powered sensitive-data flow engine) ·
+  #         Semgrep Trail-of-Bits (advanced / adversarial patterns)
+  # Blocks: HIGH / CRITICAL sensitive-data flow violations;
+  #         cryptographic, concurrency, and input-validation flaws
+  # ══════════════════════════════════════════════════════════════════
+  ai-security:
+    name: "AI-Native — Sensitive Data Flows & AI Security"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Bearer uses a data-flow engine to track how sensitive data (tokens, PII,
+      # credentials) moves through the app — catches leaks standard SAST misses.
+      # Particularly relevant for this app's JWT auth and bcrypt password paths.
+      - name: Bearer — sensitive data flow analysis
+        uses: bearer/bearer-action@v2
+        with:
+          format: sarif
+          output: bearer.sarif
+          severity: critical,high
+          exit-code: 1
+
+      - name: Upload Bearer SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: bearer.sarif
+          category: bearer-ai-security
+
+      # Trail of Bits rules — targets subtle security bugs common in AI-assisted code:
+      # insecure defaults, unsafe deserialization, timing-attack-prone comparisons, etc.
+      - name: Semgrep — Trail of Bits advanced security rules
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/trailofbits
+          generateSarif: '1'
+
+      - name: Upload Semgrep Trail-of-Bits SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep-tob
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # Security Gate — all 7 areas must pass to allow merge
+  #
+  # Branch protection setup (Settings → Branches → master):
+  #   ✓ Require status checks to pass before merging
+  #   ✓ Add: "Security Gate" as the required check
+  # ══════════════════════════════════════════════════════════════════
+  security-gate:
+    name: "Security Gate"
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - sca
+      - sast
+      - container-scan
+      - secrets
+      - iac
+      - supply-chain
+      - ai-security
+    steps:
+      - name: Evaluate all security scan results
+        run: |
+          echo "=== Security Scan Results ==="
+          echo "  SCA:            ${{ needs.sca.result }}"
+          echo "  SAST:           ${{ needs.sast.result }}"
+          echo "  Container Scan: ${{ needs.container-scan.result }}"
+          echo "  Secrets:        ${{ needs.secrets.result }}"
+          echo "  IaC:            ${{ needs.iac.result }}"
+          echo "  Supply Chain:   ${{ needs.supply-chain.result }}"
+          echo "  AI Security:    ${{ needs.ai-security.result }}"
+          echo ""
+
+          FAILED=0
+          [[ "${{ needs.sca.result }}"            != "success" ]] && FAILED=1 && echo "::error::SCA check failed"
+          [[ "${{ needs.sast.result }}"           != "success" ]] && FAILED=1 && echo "::error::SAST check failed"
+          [[ "${{ needs.container-scan.result }}" != "success" ]] && FAILED=1 && echo "::error::Container scan failed"
+          [[ "${{ needs.secrets.result }}"        != "success" ]] && FAILED=1 && echo "::error::Secrets scan failed"
+          [[ "${{ needs.iac.result }}"            != "success" ]] && FAILED=1 && echo "::error::IaC scan failed"
+          [[ "${{ needs.supply-chain.result }}"   != "success" ]] && FAILED=1 && echo "::error::Supply chain check failed"
+          [[ "${{ needs.ai-security.result }}"    != "success" ]] && FAILED=1 && echo "::error::AI-native security check failed"
+
+          if [[ $FAILED -eq 1 ]]; then
+            echo ""
+            echo "::error::One or more security checks failed. Review scan results before merging."
+            exit 1
+          fi
+
+          echo "All 7 security checks passed. Safe to merge."
