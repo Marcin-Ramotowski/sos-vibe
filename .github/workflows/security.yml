@@ -50,7 +50,7 @@ jobs:
 
       # Deep scan — catches CVEs missed by npm audit (e.g. via lockfile resolution quirks)
       - name: Trivy — npm filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -144,7 +144,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy — container image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: sos-app:scan
           format: sarif
@@ -222,7 +222,7 @@ jobs:
 
       # Trivy config mode — cross-checks Checkov; covers YAML/JSON config files
       - name: Trivy — config / IaC scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
