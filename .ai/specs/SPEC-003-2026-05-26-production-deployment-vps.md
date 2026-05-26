@@ -490,7 +490,7 @@ wymagane jest ręczne przygotowanie:
 | **AC-003-3** | `release.yml` NIE odpala się gdy `ci.yml` fail na `master`. | Zepsuj lint celowo, zmerguj — Release nie startuje. |
 | **AC-003-4** | Obraz w Docker Hub ma tag `sha-<short>` po udanym release. | `docker pull pikram/sos-app:sha-<short>` — sukces. |
 | **AC-003-5** | `https://sos.marcin00.pl/api/health` zwraca `200 {"status":"ok","db":"connected"}` po deployu. | `curl -fs https://sos.marcin00.pl/api/health \| jq .status` = `"ok"`. |
-| **AC-003-6** | Rollback do dowolnego SHA z `.deploy-log` działa. | SSH na VPS, zmień `APP_IMAGE_TAG`, `up -d --no-deps app` → `/api/health` 200. |
+| **AC-003-6** | Rollback do dowolnego SHA z `.deploy-log` działa i jest trwały po restarcie VPS. | SSH na VPS: `sed -i` nadpisuje `APP_IMAGE_TAG` w `.env.production`, następnie `pull app` + `up -d --no-deps app` → `/api/health` 200. Po `docker compose down && up` kontener wstaje na rolowanym tagu. |
 | **AC-003-7** | `deploy.yml` nie istnieje. | `ls .github/workflows/` — brak `deploy.yml`. |
 | **AC-003-8** | `ci.yml` nie zawiera job `build-and-push`. | `grep "build-and-push" .github/workflows/ci.yml` — pusty wynik. |
 | **AC-003-9** | `compose.prod.yaml` używa `${APP_IMAGE_TAG:-latest}` dla obrazu app. | `grep "APP_IMAGE_TAG" compose.prod.yaml` — wynik. |
@@ -515,3 +515,6 @@ wymagane jest ręczne przygotowanie:
 - Zakres okrojony: tylko CI/Release split + poprawki artefaktu; bez bootstrap, backup, DR
 - Architektura: `security.yml` bez zmian; `ci.yml` traci `build-and-push`; nowy `release.yml`
   triggeruje przez `workflow_run` po CI success na `master`
+- Hardening deploy script: quoted heredoc `<< 'ENDSSH'`, pozycjonalne args, `sed` dla SHA
+- Dodano `--env-file .env.production` do wszystkich `docker compose` komend
+- AC-003-6 zaktualizowano: rollback używa `sed` do trwałego nadpisania `APP_IMAGE_TAG` w `.env.production`
