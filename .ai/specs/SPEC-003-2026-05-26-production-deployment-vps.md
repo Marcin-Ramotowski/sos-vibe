@@ -83,8 +83,9 @@ GitHub Actions:
 3. SSH na `deploy@tymon343.mikrus.xyz`, wykonuje:
    ```bash
    cd /opt/sos
-   APP_IMAGE_TAG=sha-abc1234 docker compose -f compose.yaml -f compose.prod.yaml pull app
-   APP_IMAGE_TAG=sha-abc1234 docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+   sed -i "s/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=sha-abc1234/" .env.production
+   docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app
+   docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
    echo "$(date -u +%FT%TZ) sha-abc1234 fix(api): tighten enrollment validation" >> .deploy-log
    ```
 4. Smoke test: `docker compose exec -T app wget --no-verbose --tries=1 --spider http://localhost:3000/api/health` co 2s przez max 60s. Wykonywane wewnątrz kontenera — port nie jest zbindowany na hosta.
@@ -125,8 +126,9 @@ $ ssh deploy@tymon343.mikrus.xyz "tail -5 /opt/sos/.deploy-log"
 ```bash
 $ ssh deploy@tymon343.mikrus.xyz "
   cd /opt/sos &&
-  APP_IMAGE_TAG=sha-9f8e7d6 docker compose -f compose.yaml -f compose.prod.yaml pull app &&
-  APP_IMAGE_TAG=sha-9f8e7d6 docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+  sed -i 's/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=sha-9f8e7d6/' .env.production &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
 "
 ```
 
@@ -309,32 +311,38 @@ jobs:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
           COMMIT_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
-          # Heredoc bez cudzysłowu przy ENDSSH — zmienne ${IMAGE_TAG} i ${COMMIT_MSG}
-          # są podstawiane przez runner (powłoka lokalna) przed wysłaniem przez SSH.
-          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz bash -s << ENDSSH
+          # Quoted heredoc (<< 'ENDSSH') — brak lokalnej ekspansji zmiennych.
+          # IMAGE_TAG i COMMIT_MSG przekazywane jako argumenty pozycyjne ($1, $2)
+          # aby metaznaki w commit message nie mogły złamać skryptu ani spowodować
+          # arbitrary command execution na zdalnym serwerze.
+          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz \
+            bash -s -- "${IMAGE_TAG}" "${COMMIT_MSG%%$'\n'*}" << 'ENDSSH'
             set -euo pipefail
+            IMAGE_TAG="$1"
+            COMMIT_MSG="$2"
             cd /opt/sos
-            export APP_IMAGE_TAG="${IMAGE_TAG}"
-            docker compose -f compose.yaml -f compose.prod.yaml pull app
-            docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+            sed -i "s/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=${IMAGE_TAG}/" .env.production
+            docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app
+            docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
             printf '%s %s %s\n' \
-              "\$(date -u +%FT%TZ)" \
+              "$(date -u +%FT%TZ)" \
               "${IMAGE_TAG}" \
-              "${COMMIT_MSG%%\$'\n'*}" \
+              "${COMMIT_MSG}" \
               >> .deploy-log
           ENDSSH
 
       - name: Smoke test
         run: |
-          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz '
+          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz << 'ENDSSH'
             for i in $(seq 1 30); do
-              docker compose -f /opt/sos/compose.yaml -f /opt/sos/compose.prod.yaml \
+              docker compose --env-file /opt/sos/.env.production \
+                -f /opt/sos/compose.yaml -f /opt/sos/compose.prod.yaml \
                 exec -T app wget --no-verbose --tries=1 --spider \
                 http://localhost:3000/api/health && exit 0
               sleep 2
             done
             echo "Health check timed out after 60s"; exit 1
-          '
+          ENDSSH
 ```
 
 **Uwaga o `ssh-keyscan`:** Pobiera klucz hosta dynamicznie podczas deployu — prostsze, ale
