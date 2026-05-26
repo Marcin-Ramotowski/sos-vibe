@@ -95,10 +95,9 @@ Cofnij do wybranego tagu:
 ```bash
 ssh deploy@tymon343.mikrus.xyz "
   cd /opt/sos &&
-  APP_IMAGE_TAG=sha-9f8e7d6 \
-    docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
-  APP_IMAGE_TAG=sha-9f8e7d6 \
-    docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+  sed -i 's/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=sha-9f8e7d6/' .env.production &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
 "
 ```
 
