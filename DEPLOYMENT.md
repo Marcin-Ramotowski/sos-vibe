@@ -58,7 +58,7 @@ docker compose -f compose.yaml -f compose.prod.yaml up -d
 
 # Sprawdź status
 docker compose -f compose.yaml -f compose.prod.yaml ps
-curl http://localhost:3000/api/health
+docker compose -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
 Przy starcie `entrypoint.sh` automatycznie uruchamia `prisma migrate deploy`.
@@ -118,8 +118,8 @@ docker compose -f compose.yaml -f compose.prod.yaml logs --tail=100 app
 # Śledzenie logów na żywo
 docker compose -f compose.yaml -f compose.prod.yaml logs -f app
 
-# Health check
-curl http://localhost:3000/api/health
+# Health check (port nie jest zbindowany na hosta — exec wewnątrz kontenera)
+docker compose -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
 ---
