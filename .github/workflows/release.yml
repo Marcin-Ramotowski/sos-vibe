@@ -79,7 +79,7 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz bash -s << ENDSSH
             set -euo pipefail
             cd /opt/sos
-            export APP_IMAGE_TAG="${IMAGE_TAG}"
+            sed -i "s/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=${IMAGE_TAG}/" .env.production
             docker compose -f compose.yaml -f compose.prod.yaml pull app
             docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
             printf '%s %s %s\n' \
