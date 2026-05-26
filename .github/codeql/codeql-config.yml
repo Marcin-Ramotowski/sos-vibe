@@ -1,7 +1,7 @@
 name: "CodeQL Config"
 
 # Exclude documentation and spec files from CodeQL analysis.
-# Markdown code blocks with `wget http://localhost` (health-check examples
+# Markdown code blocks with wget fetching via http on localhost (health-check examples
 # inside docker compose exec) are false positives — loopback connections
 # inside a container; the app intentionally serves plain HTTP internally.
 paths-ignore:
