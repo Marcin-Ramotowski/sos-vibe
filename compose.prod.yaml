@@ -1,9 +1,14 @@
 services:
   app:
-    image: pikram/sos-app:latest
+    image: pikram/sos-app:${APP_IMAGE_TAG:-latest}
     environment:
       NODE_ENV: production
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -21,6 +26,11 @@ services:
 
   db:
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -42,6 +52,11 @@ services:
     depends_on:
       - app
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
     networks:
       - public
 
