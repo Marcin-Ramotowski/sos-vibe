@@ -518,3 +518,5 @@ wymagane jest ręczne przygotowanie:
 - Hardening deploy script: quoted heredoc `<< 'ENDSSH'`, pozycjonalne args, `sed` dla SHA
 - Dodano `--env-file .env.production` do wszystkich `docker compose` komend
 - AC-003-6 zaktualizowano: rollback używa `sed` do trwałego nadpisania `APP_IMAGE_TAG` w `.env.production`
+- fix(ci): `release.yml` zabezpieczony przed pwn-request (`workflow_run.event == 'push'`)
+- fix(ci): `.github/codeql/codeql-config.yml` wyklucza `**/*.md` i `.ai/**` z analizy CodeQL (false positive: `wget http://localhost` w docker exec)
