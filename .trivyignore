@@ -1,0 +1,35 @@
+# Trivy ignore file — accepted / unfixable findings
+#
+# Format: one GHSA or CVE ID per line, optionally with an expiry date:
+#   GHSA-xxxx-xxxx-xxxx exp:2026-12-31
+#
+# Before adding an entry here:
+#   1. Confirm the finding has no sane fix (e.g. the "fix" would be a major
+#      downgrade that breaks the app).
+#   2. Document WHY it is accepted.
+#   3. Set an expiry date so the suppress is re-evaluated periodically.
+
+# postcss < 8.5.10 — XSS via unescaped </style> in bundled Next.js postcss.
+# The only fix npm offers is `npm audit fix --force` which downgrades Next.js
+# to 9.3.3 — a 6-major-version downgrade that is not acceptable.
+# Re-evaluate when Next.js ships a patch that bundles postcss >= 8.5.10.
+# GHSA: https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+GHSA-qx2v-qp2m-jg93 exp:2026-11-25
+CVE-2026-41305 exp:2026-11-25
+
+# @hono/node-server < 1.19.13 — middleware bypass via repeated slashes in
+# serveStatic. This is a devDependency of @prisma/dev (internal Prisma
+# tooling). The only fix downgrades prisma from 7.x to 6.x — a breaking
+# change for this project. Re-evaluate when Prisma 7.x ships with a fixed
+# @hono/node-server version.
+# GHSA: https://github.com/advisories/GHSA-92pp-h63x-v22m
+GHSA-92pp-h63x-v22m exp:2026-11-25
+CVE-2026-39406 exp:2026-11-25
+
+# picomatch 4.0.3 — ReDoS via crafted extglob patterns (CVE-2026-33671).
+# This package is bundled INSIDE npm's own node_modules in node:22-alpine —
+# it is NOT part of our application code. npm is not invoked at runtime in
+# the production runner, so the attack surface is zero. Fix is picomatch
+# >= 4.0.4, which will arrive via a future node:22-alpine base-image update.
+# Re-evaluate when node:22 ships with npm >= version that bundles picomatch 4.0.4+.
+CVE-2026-33671 exp:2026-11-25
