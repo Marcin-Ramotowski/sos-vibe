@@ -88,7 +88,7 @@ GitHub Actions:
    docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
    echo "$(date -u +%FT%TZ) sha-abc1234 fix(api): tighten enrollment validation" >> .deploy-log
    ```
-4. Smoke test: `docker compose exec -T app wget --no-verbose --tries=1 --spider http://localhost:3000/api/health` co 2s przez max 60s. Wykonywane wewnątrz kontenera — port nie jest zbindowany na hosta.
+4. Smoke test: `docker compose --env-file .env.production exec -T app wget --no-verbose --tries=1 --spider http://localhost:3000/api/health` co 2s przez max 60s. Wykonywane wewnątrz kontenera — port nie jest zbindowany na hosta.
 
 **Krok 4 — Weryfikacja:**
 
@@ -197,8 +197,8 @@ push do master
       │
       ▼
    [SSH → tymon343.mikrus.xyz]
-   [docker compose pull app]
-   [docker compose up -d --no-deps app]
+   [docker compose --env-file .env.production pull app]
+   [docker compose --env-file .env.production up -d --no-deps app]
    [curl /api/health x30 co 2s]
       │
    smoke OK
@@ -449,7 +449,7 @@ Nowa struktura:
    `.env.production`), jak pobrać i uruchomić obraz.
 3. **Codzienna praca** — co się dzieje po merge do `master` (CI → Release automatycznie).
 4. **Rollback** — ręczna komenda SSH z tagiem SHA z `.deploy-log`.
-5. **Logi i status** — `docker compose logs`, `docker compose ps`.
+5. **Logi i status** — `docker compose --env-file .env.production logs`, `docker compose --env-file .env.production ps`.
 6. **Troubleshooting** — app nie startuje (złe `DATABASE_URL`, brak `JWT_SECRET`, brak migracji).
 
 ---
@@ -466,7 +466,7 @@ Nowa struktura:
 
 ### Zmienne środowiskowe na VPS (`/opt/sos/.env.production`, chmod 600)
 
-Muszą istnieć przed pierwszym `docker compose up`. Nie są tworzone przez ten pipeline —
+Muszą istnieć przed pierwszym `docker compose --env-file .env.production up`. Nie są tworzone przez ten pipeline —
 wymagane jest ręczne przygotowanie:
 
 | Zmienna | Przykład |
