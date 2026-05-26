@@ -53,12 +53,12 @@ ssh deploy@tymon343.mikrus.xyz
 cd /opt/sos
 
 # Pobierz najnowszy obraz i uruchom
-docker compose -f compose.yaml -f compose.prod.yaml pull
-docker compose -f compose.yaml -f compose.prod.yaml up -d
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d
 
 # Sprawdź status
-docker compose -f compose.yaml -f compose.prod.yaml ps
-docker compose -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml ps
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
 Przy starcie `entrypoint.sh` automatycznie uruchamia `prisma migrate deploy`.
@@ -72,7 +72,7 @@ Po każdym merge do `master`:
 1. `ci.yml` uruchamia lint + testy.
 2. Po sukcesie CI automatycznie startuje `release.yml`.
 3. `release.yml` buduje obraz z tagiem `sha-<short>` i `latest`, pushuje do Docker Hub.
-4. SSH na VPS: `docker compose pull app` + `up -d --no-deps app`.
+4. SSH na VPS: `docker compose --env-file .env.production pull app` + `up -d --no-deps app`.
 5. Smoke test `/api/health` — jeśli fail, job kończy się czerwono (GH wysyła email).
 6. Każdy udany deploy dopisuje wpis do `/opt/sos/.deploy-log`.
 
@@ -96,9 +96,9 @@ Cofnij do wybranego tagu:
 ssh deploy@tymon343.mikrus.xyz "
   cd /opt/sos &&
   APP_IMAGE_TAG=sha-9f8e7d6 \
-    docker compose -f compose.yaml -f compose.prod.yaml pull app &&
+    docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
   APP_IMAGE_TAG=sha-9f8e7d6 \
-    docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+    docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
 "
 ```
 
@@ -110,16 +110,16 @@ ssh deploy@tymon343.mikrus.xyz "
 
 ```bash
 # Status kontenerów
-docker compose -f compose.yaml -f compose.prod.yaml ps
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml ps
 
 # Logi aplikacji (ostatnie 100 linii)
-docker compose -f compose.yaml -f compose.prod.yaml logs --tail=100 app
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs --tail=100 app
 
 # Śledzenie logów na żywo
-docker compose -f compose.yaml -f compose.prod.yaml logs -f app
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs -f app
 
 # Health check (port nie jest zbindowany na hosta — exec wewnątrz kontenera)
-docker compose -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
 ---
@@ -129,26 +129,26 @@ docker compose -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://lo
 ### Aplikacja nie startuje
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml logs app
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs app
 ```
 
 Najczęstsze przyczyny:
 - Błędna `DATABASE_URL` — host musi być `db` (nie `localhost`).
 - Brakujący `JWT_SECRET` w `.env.production`.
-- Baza nie gotowa — sprawdź `docker compose ps db` (powinno być `healthy`).
+- Baza nie gotowa — sprawdź `docker compose --env-file .env.production ps db` (powinno być `healthy`).
 - Brak migracji — `entrypoint.sh` uruchamia je automatycznie, ale jeśli baza jest pusta i migracja nie powiodła się, sprawdź logi.
 
 ### Błąd połączenia z bazą
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml exec db \
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec db \
   psql -U $POSTGRES_USER -d $POSTGRES_DB -c '\l'
 ```
 
 ### Tunel Cloudflare nie działa
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml logs cloudflared
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs cloudflared
 ```
 
 Sprawdź czy `CLOUDFLARED_TOKEN` w `.env.production` jest aktualny (dashboard Cloudflare → Zero Trust → Tunnels).
@@ -156,6 +156,6 @@ Sprawdź czy `CLOUDFLARED_TOKEN` w `.env.production` jest aktualny (dashboard Cl
 ### Backup bazy danych
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml exec db \
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec db \
   pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup_$(date +%Y%m%d).sql
 ```
