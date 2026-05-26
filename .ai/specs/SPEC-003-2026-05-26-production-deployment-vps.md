@@ -87,7 +87,7 @@ GitHub Actions:
    APP_IMAGE_TAG=sha-abc1234 docker compose -f compose.yaml -f compose.prod.yaml up -d --no-deps app
    echo "$(date -u +%FT%TZ) sha-abc1234 fix(api): tighten enrollment validation" >> .deploy-log
    ```
-4. Smoke test: `curl http://localhost:3000/api/health` co 2s przez max 60s.
+4. Smoke test: `docker compose exec -T app wget --no-verbose --tries=1 --spider http://localhost:3000/api/health` co 2s przez max 60s. Wykonywane wewnątrz kontenera — port nie jest zbindowany na hosta.
 
 **Krok 4 — Weryfikacja:**
 
@@ -328,7 +328,9 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz '
             for i in $(seq 1 30); do
-              curl -fs http://localhost:3000/api/health && exit 0
+              docker compose -f /opt/sos/compose.yaml -f /opt/sos/compose.prod.yaml \
+                exec -T app wget --no-verbose --tries=1 --spider \
+                http://localhost:3000/api/health && exit 0
               sleep 2
             done
             echo "Health check timed out after 60s"; exit 1
