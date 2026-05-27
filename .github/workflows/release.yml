@@ -19,10 +19,9 @@ jobs:
     outputs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
-      # nosemgrep: yaml.github-actions.security.workflow-run-target-code-checkout.workflow-run-target-code-checkout
-      # Safe: job-level `if` guards on `workflow_run.event == 'push'`, so this SHA
+      # Safe: job-level `if` guards on workflow_run.event == 'push', so this SHA
       # is always a commit already merged to master — never a PR from a fork.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # nosemgrep: yaml.github-actions.security.workflow-run-target-code-checkout.workflow-run-target-code-checkout
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 

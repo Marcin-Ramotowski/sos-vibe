@@ -113,7 +113,6 @@ jobs:
             p/nextjs
             p/owasp-top-ten
             p/jwt
-          generateSarif: '1'
 
       - name: Upload Semgrep SARIF
         uses: github/codeql-action/upload-sarif@v4
@@ -357,7 +356,6 @@ jobs:
         uses: semgrep/semgrep-action@v1
         with:
           config: p/trailofbits
-          generateSarif: '1'
 
       - name: Upload Semgrep Trail-of-Bits SARIF
         uses: github/codeql-action/upload-sarif@v4
