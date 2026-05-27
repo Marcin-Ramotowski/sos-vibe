@@ -50,12 +50,8 @@ jobs:
 
       - name: Smoke test
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p 10343 deploy@tymon343.mikrus.xyz << 'ENDSSH'
-            for i in $(seq 1 30); do
-              docker compose --env-file /opt/sos/.env.production \
-                -f /opt/sos/compose.yaml -f /opt/sos/compose.prod.yaml \
-                exec -T app wget --no-verbose --tries=1 --spider http://localhost:3000/api/health && exit 0 # nosemgrep: trailofbits.generic.wget-unencrypted-url.wget-unencrypted-url
-              sleep 2
-            done
-            echo "Health check timed out after 60s"; exit 1
-          ENDSSH
+          for i in $(seq 1 30); do
+            curl -sf https://sos.marcin00.pl/api/health && exit 0
+            sleep 2
+          done
+          echo "Health check timed out after 60s"; exit 1
