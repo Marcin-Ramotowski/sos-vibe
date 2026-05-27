@@ -187,6 +187,7 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       # TruffleHog — only reports secrets it can actively verify (reduces false positives)
       - name: TruffleHog — verified secrets
@@ -292,7 +293,7 @@ jobs:
 
       # Grype — scans the full dependency tree for known CVEs
       - name: Grype — scan for CVEs
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         id: grype
         with:
           path: .
@@ -310,7 +311,7 @@ jobs:
 
       # Keep a dated SBOM artifact per commit for audit / compliance purposes
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sbom-${{ github.sha }}
