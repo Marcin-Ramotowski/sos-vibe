@@ -49,7 +49,7 @@ APP_IMAGE_TAG=latest
 ### Pierwsze uruchomienie
 
 ```bash
-ssh -p 20343 deploy@tymon343.mikrus.xyz
+ssh -p 10343 deploy@tymon343.mikrus.xyz
 cd /opt/sos
 
 # Pobierz najnowszy obraz i uruchom
@@ -85,7 +85,7 @@ Nic nie wymaga ręcznej interwencji przy normalnym deploy.
 Sprawdź historię deployów:
 
 ```bash
-ssh -p 20343 deploy@tymon343.mikrus.xyz "tail -10 /opt/sos/.deploy-log"
+ssh -p 10343 deploy@tymon343.mikrus.xyz "tail -10 /opt/sos/.deploy-log"
 # 2026-05-26T14:32:00Z sha-abc1234 fix(api): tighten enrollment validation
 # 2026-05-26T11:05:00Z sha-9f8e7d6 feat(ui): student grade filters
 ```
@@ -93,7 +93,7 @@ ssh -p 20343 deploy@tymon343.mikrus.xyz "tail -10 /opt/sos/.deploy-log"
 Cofnij do wybranego tagu:
 
 ```bash
-ssh -p 20343 deploy@tymon343.mikrus.xyz "
+ssh -p 10343 deploy@tymon343.mikrus.xyz "
   cd /opt/sos &&
   sed -i 's/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=sha-9f8e7d6/' .env.production &&
   docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
