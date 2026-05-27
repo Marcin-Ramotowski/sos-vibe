@@ -80,11 +80,10 @@ jobs:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
           COMMIT_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
+          COMMIT_FIRST="${COMMIT_MSG%%$'\n'*}"
           ssh -i ~/.ssh/id_ed25519 -p 10343 deploy@tymon343.mikrus.xyz \
-            bash -s -- "${IMAGE_TAG}" "${COMMIT_MSG%%$'\n'*}" << 'ENDSSH'
+            "IMAGE_TAG=$(printf '%q' "${IMAGE_TAG}") COMMIT_MSG=$(printf '%q' "${COMMIT_FIRST}") bash -s" << 'ENDSSH'
             set -euo pipefail
-            IMAGE_TAG="$1"
-            COMMIT_MSG="$2"
             cd /opt/sos
             sed -i "s/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=${IMAGE_TAG}/" .env.production
             docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app
