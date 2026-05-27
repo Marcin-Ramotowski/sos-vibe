@@ -1,198 +1,160 @@
 # Deployment Guide
 
-## Wdrożenie na VPS (Docker Compose)
+## Architektura
 
-### Wymagania
-
-- VPS z zainstalowanym Docker + Docker Compose
-- Dostęp SSH
-- Opcjonalnie: domena dla SSL
-
-### Krok 1: Przygotowanie serwera
-
-```bash
-# SSH na serwer
-ssh user@your-server
-
-# Instalacja Docker (jeśli nie ma)
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-newgrp docker
-
-# Weryfikacja
-docker --version
-docker compose version
+```
+GitHub Actions (Release pipeline)
+  └─► Docker Hub: pikram/sos-app:sha-<short>
+        └─► SSH → deploy@tymon343.mikrus.xyz
+              └─► docker compose pull + up
+                    ├── app (Next.js standalone)
+                    ├── db  (PostgreSQL 16)
+                    └── cloudflared → sos.marcin00.pl
 ```
 
-### Krok 2: Klonowanie i konfiguracja
+- **CI** (`ci.yml`) — walidacja: lint + typecheck + testy. Odpala się na każdym PR i pushu do `master`.
+- **Release** (`release.yml`) — budowanie obrazu + wdrożenie. Odpala się automatycznie po sukcesie CI na `master`.
+- **Security** (`security.yml`) — 7 skanów bezpieczeństwa na każdym PR. Buduje obraz lokalnie (bez push) tylko do skanowania.
+- Ruch HTTP wyłącznie przez **Cloudflare Tunnel** — brak otwartych portów 80/443 na VPS.
 
-```bash
-git clone <repo-url>
-cd sos
+---
 
-# Utwórz plik środowiskowy produkcyjnego
-cp .env.example .env.production
-nano .env.production
-```
+## Pierwsze wdrożenie
 
-**Wymagane wartości produkcyjne** w `.env.production`:
+### Wymagania wstępne (na VPS)
+
+- Docker zainstalowany, user `deploy` w grupie `docker`.
+- Katalog `/opt/sos/` z plikami `compose.yaml` i `compose.prod.yaml` (sklonowane lub skopiowane z repo).
+- Plik `/opt/sos/.env.production` (`chmod 600`):
 
 ```bash
 NODE_ENV=production
-DATABASE_URL=postgresql://sos_user:STRONG_PASSWORD@db:5432/sos_prod
-JWT_SECRET=GENERATE_SECURE_64_CHAR_SECRET
-POSTGRES_USER=sos_user
-POSTGRES_PASSWORD=STRONG_PASSWORD
+POSTGRES_USER=sos_prod
+POSTGRES_PASSWORD=<openssl rand -base64 32>
 POSTGRES_DB=sos_prod
+DATABASE_URL=postgresql://sos_prod:<password>@db:5432/sos_prod
+JWT_SECRET=<openssl rand -base64 48>
+CLOUDFLARED_TOKEN=<token z Cloudflare Dashboard → Zero Trust → Tunnels>
+APP_IMAGE_TAG=latest
 ```
 
-Generowanie bezpiecznego sekretu:
+### GitHub Secrets (Settings → Secrets and variables → Actions)
+
+| Secret | Wartość |
+|---|---|
+| `DOCKERHUB_USERNAME` | login Docker Hub |
+| `DOCKERHUB_TOKEN` | token Docker Hub |
+| `DEPLOY_SSH_KEY` | klucz prywatny ed25519 dla usera `deploy` na VPS |
+
+### Pierwsze uruchomienie
 
 ```bash
-openssl rand -base64 48
-```
+ssh deploy@tymon343.mikrus.xyz
+cd /opt/sos
 
-### Krok 3: Deploy
-
-```bash
-# Załaduj zmienne środowiskowe
-export $(cat .env.production | grep -v '^#' | xargs)
-
-# Zbuduj i uruchom
-make prod-up
-
-# Uruchom migracje
-make prod-migrate
+# Pobierz najnowszy obraz i uruchom
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d
 
 # Sprawdź status
-docker compose -f compose.yaml -f compose.prod.yaml ps
-docker compose -f compose.yaml -f compose.prod.yaml logs app
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml ps
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
-### Krok 4: Weryfikacja
+Przy starcie `entrypoint.sh` automatycznie uruchamia `prisma migrate deploy`.
+
+---
+
+## Codzienna praca
+
+Po każdym merge do `master`:
+
+1. `ci.yml` uruchamia lint + testy.
+2. Po sukcesie CI automatycznie startuje `release.yml`.
+3. `release.yml` buduje obraz z tagiem `sha-<short>` i `latest`, pushuje do Docker Hub.
+4. SSH na VPS: `docker compose --env-file .env.production pull app` + `up -d --no-deps app`.
+5. Smoke test `/api/health` — jeśli fail, job kończy się czerwono (GH wysyła email).
+6. Każdy udany deploy dopisuje wpis do `/opt/sos/.deploy-log`.
+
+Nic nie wymaga ręcznej interwencji przy normalnym deploy.
+
+---
+
+## Rollback
+
+Sprawdź historię deployów:
 
 ```bash
-curl http://localhost:3000/api/health
-# Oczekiwany wynik: {"status":"ok","db":"connected",...}
+ssh deploy@tymon343.mikrus.xyz "tail -10 /opt/sos/.deploy-log"
+# 2026-05-26T14:32:00Z sha-abc1234 fix(api): tighten enrollment validation
+# 2026-05-26T11:05:00Z sha-9f8e7d6 feat(ui): student grade filters
 ```
 
----
-
-## SSL z Caddy (rekomendowane)
-
-Dodaj do `docker-compose.prod.yml`:
-
-```yaml
-services:
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    restart: unless-stopped
-    depends_on:
-      - app
-
-volumes:
-  caddy_data:
-  caddy_config:
-```
-
-Utwórz `Caddyfile`:
-
-```
-your-domain.com {
-    reverse_proxy app:3000
-}
-```
-
-Caddy automatycznie pobierze certyfikat Let's Encrypt.
-
----
-
-## Aktualizacja wdrożenia
+Cofnij do wybranego tagu:
 
 ```bash
-# Pobierz zmiany
-git pull
-
-# Zbuduj nowy obraz i wdróż (zero-downtime jeśli masz repliki)
-make build-prod
-make prod-up
-
-# Uruchom nowe migracje (jeśli są)
-make prod-migrate
+ssh deploy@tymon343.mikrus.xyz "
+  cd /opt/sos &&
+  sed -i 's/^APP_IMAGE_TAG=.*/APP_IMAGE_TAG=sha-9f8e7d6/' .env.production &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml pull app &&
+  docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml up -d --no-deps app
+"
 ```
+
+`--no-deps` recreates tylko kontener `app` — baza danych i cloudflared zostają nienaruszone.
 
 ---
 
-## Zarządzanie
+## Logi i status
 
 ```bash
-# Logi aplikacji
-make prod-logs
+# Status kontenerów
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml ps
 
-# Restart
-docker compose -f compose.yaml -f compose.prod.yaml restart app
+# Logi aplikacji (ostatnie 100 linii)
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs --tail=100 app
 
-# Backup bazy danych
-docker compose -f compose.yaml -f compose.prod.yaml exec db \
-  pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup_$(date +%Y%m%d).sql
+# Śledzenie logów na żywo
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs -f app
 
-# Przywracanie backupu
-docker compose -f compose.yaml -f compose.prod.yaml exec -T db \
-  psql -U $POSTGRES_USER $POSTGRES_DB < backup_20240101.sql
+# Health check (port nie jest zbindowany na hosta — exec wewnątrz kontenera)
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
 ```
 
 ---
 
-## Monitoring
-
-**Health check** (wbudowany):
-
-```bash
-curl https://your-domain.com/api/health
-```
-
-Docker health check jest skonfigurowany — nieprawidłowy stan kontenera pojawi się w `docker compose ps`.
-
-**Zalecane narzędzia zewnętrzne**:
-
-| Cel | Narzędzie |
-|-----|-----------|
-| Uptime monitoring | UptimeRobot (darmowy) |
-| Log aggregation | Loki + Grafana |
-| Alerting | PagerDuty / OpsGenie |
-
----
-
-## Rozwiązywanie problemów
+## Troubleshooting
 
 ### Aplikacja nie startuje
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml logs app
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs app
 ```
 
 Najczęstsze przyczyny:
-- Zła `DATABASE_URL` (sprawdź host `db`, nie `localhost`)
-- Brak migracji (`make prod-migrate`)
-- Brakujący `JWT_SECRET`
+- Błędna `DATABASE_URL` — host musi być `db` (nie `localhost`).
+- Brakujący `JWT_SECRET` w `.env.production`.
+- Baza nie gotowa — sprawdź `docker compose --env-file .env.production ps db` (powinno być `healthy`).
+- Brak migracji — `entrypoint.sh` uruchamia je automatycznie, ale jeśli baza jest pusta i migracja nie powiodła się, sprawdź logi.
 
 ### Błąd połączenia z bazą
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml exec db psql -U $POSTGRES_USER -d $POSTGRES_DB -c '\l'
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec db \
+  psql -U $POSTGRES_USER -d $POSTGRES_DB -c '\l'
 ```
 
-### Reset bazy (UWAGA: usuwa dane)
+### Tunel Cloudflare nie działa
 
 ```bash
-docker compose -f compose.yaml -f compose.prod.yaml down -v
-make prod-up
-make prod-migrate
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs cloudflared
+```
+
+Sprawdź czy `CLOUDFLARED_TOKEN` w `.env.production` jest aktualny (dashboard Cloudflare → Zero Trust → Tunnels).
+
+### Backup bazy danych
+
+```bash
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec db \
+  pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup_$(date +%Y%m%d).sql
 ```

@@ -1,0 +1,4 @@
+# Documentation files — health-check examples use loopback connections
+# inside containers; HTTP is intentional (TLS terminates at Cloudflare Tunnel).
+**/*.md
+.ai/
