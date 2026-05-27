@@ -1,12 +1,10 @@
 name: Build
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [master]
-    paths-ignore:
-      - '**/*.md'
-      - '.ai/**'
-      - 'docs/**'
 
 permissions:
   contents: read
@@ -15,8 +13,15 @@ jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
     steps:
-      - uses: actions/checkout@v6
+      # Safe: guarded by workflow_run.event == 'push' — SHA is always a
+      # commit already on master, never a PR from a fork.
+      - uses: actions/checkout@v6 # nosemgrep: yaml.github-actions.security.workflow-run-target-code-checkout.workflow-run-target-code-checkout
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
