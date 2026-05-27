@@ -73,14 +73,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H tymon343.mikrus.xyz >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p 20343 tymon343.mikrus.xyz >> ~/.ssh/known_hosts
 
       - name: Deploy
         env:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
           COMMIT_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz \
+          ssh -i ~/.ssh/id_ed25519 -p 20343 deploy@tymon343.mikrus.xyz \
             bash -s -- "${IMAGE_TAG}" "${COMMIT_MSG%%$'\n'*}" << 'ENDSSH'
             set -euo pipefail
             IMAGE_TAG="$1"
@@ -98,7 +98,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          ssh -i ~/.ssh/id_ed25519 deploy@tymon343.mikrus.xyz << 'ENDSSH'
+          ssh -i ~/.ssh/id_ed25519 -p 20343 deploy@tymon343.mikrus.xyz << 'ENDSSH'
             for i in $(seq 1 30); do
               docker compose --env-file /opt/sos/.env.production \
                 -f /opt/sos/compose.yaml -f /opt/sos/compose.prod.yaml \
