@@ -58,7 +58,8 @@ docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml u
 
 # Sprawdź status
 docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml ps
-docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app \
+  node -e "const h=require('http');h.get('http://localhost:3000/api/health',r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{console.log(d);process.exit(r.statusCode<400?0:1)})}).on('error',e=>{console.error(e.message);process.exit(1)})"
 ```
 
 Przy starcie `entrypoint.sh` automatycznie uruchamia `prisma migrate deploy`.
@@ -118,7 +119,8 @@ docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml l
 docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml logs -f app
 
 # Health check (port nie jest zbindowany na hosta — exec wewnątrz kontenera)
-docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app wget -qO- http://localhost:3000/api/health
+docker compose --env-file .env.production -f compose.yaml -f compose.prod.yaml exec app \
+  node -e "const h=require('http');h.get('http://localhost:3000/api/health',r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{console.log(d);process.exit(r.statusCode<400?0:1)})}).on('error',e=>{console.error(e.message);process.exit(1)})"
 ```
 
 ---
